@@ -1,0 +1,185 @@
+/* Filters Container */
+.filters-container {
+    background-color: #f9fafb;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    margin: 0 auto 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Filters Title */
+.filters-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+/* Filter Group */
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Labels */
+.filter-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* Select Dropdown */
+.filter-select {
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #ffffff;
+    font-size: 0.95rem;
+    color: #374151;
+    cursor: pointer;
+    transition: border 0.2s ease-in-out;
+}
+
+.filter-select:hover,
+.filter-select:focus {
+    border-color: #3b82f6;
+    outline: none;
+}
+
+/* Date Input */
+.filter-input {
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #374151;
+    transition: border 0.2s ease-in-out;
+}
+
+.filter-input:hover,
+.filter-input:focus {
+    border-color: #3b82f6;
+    outline: none;
+}
+
+/* Container Styling */
+.available-tutors-container {
+    background-color: #f9fafb;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Scrollable List */
+.tutors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 8px; /* Prevents text from getting too close to scrollbar */
+}
+
+/* Title Styling */
+.available-tutors-container h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+/* Tutor Card Styling */
+.block {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px; /* More space between radio & text */
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background-color: white;
+    transition: background 0.3s ease-in-out;
+    cursor: pointer; /* Ensures clicking anywhere selects the radio */
+    margin-bottom: 8px;
+}
+
+.block:hover {
+    background-color: #f3f4f6;
+}
+
+/* Radio Button Styling */
+input[type="radio"] {
+    accent-color: #3b82f6;
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+/* Tutor Details Section */
+.tutor-details {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 6px;
+}
+
+.apply-button {
+    margin-top: 16px;
+}
+
+
+/* Compact Rows */
+.tutor-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Aligns text better */
+    gap: 8px;
+    padding: 4px 0;
+    border-bottom: 1px solid #e5e7eb; /* Light separator */
+}
+
+.tutor-item:last-child {
+    border-bottom: none; /* Remove last border */
+}
+
+/* Label Styling */
+.tutor-item strong {
+    color: #1f2937;
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+/* Readability Improvements */
+.text-gray-500 {
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.text-red-500 {
+    font-size: 1rem;
+    color: #dc2626;
+    margin-top: 12px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+
+
+/* Schedule Button */
+.schedule-btn-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+    margin-right: 8px;
+}
+  

@@ -1,0 +1,60 @@
+.rightPanel {
+  position: fixed;
+  right: 2vh;                 /* distance from screen edge          */
+  top: 6vh;
+  height: calc(100vh - 13vh); /* ≈ 2 vh top  + 11 vh header/footer  */
+  width: 27vh;
+
+  background: #204eb1;
+  border: 5px solid #f38223;
+  border-radius: 23px;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+/* ‑‑‑‑‑ LEFT PANE ‑‑‑‑‑ */
+.leftPanel {
+  position: fixed;
+  left: 2vh;                  /* match the right panel’s edge gap   */
+  top: 6vh;
+  height: calc(100vh - 8.4vh);
+
+  /* 27 vh   = right panel’s width
+     2 vh    = right panel’s distance from screen edge
+     2 vh    = *extra* space you want between the two panels      */
+  right: 34vh;
+  display: grid;
+  
+  grid-template-columns: 30% 1fr;
+  gap: 1.5rem;
+
+  background: #204eb1;
+  border: 5px solid #f38223;
+  border-radius: 23px;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  overflow: auto;
+  
+}
+
+/* Column that holds ProfileSearch + AvailabilityRequests */
+.sideColumn .profileBlock {
+  height: auto;            /* ignore the “height:100%” in the profile CSS */
+  flex: 0 0 auto;          /* don’t let flex stretch it either             */
+}
+
+/* Keep widths consistent with ProfileSearch */
+.sideColumn .profileBlock,
+.sideColumn .profileSearchContainer { /* adjust class if different */
+  width: 100%;
+}
+
+/* calendarColumn: keep both widgets at the bottom, remove big padding */
+.calendarColumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;   /* anchor to bottom of leftPanel   */
+  gap: 2rem;                 /* space between Requests & Calendar*/
+  /* padding-top: 20rem;  ⬅️  delete this line so it’s not gigantic */
+}

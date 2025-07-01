@@ -1,0 +1,53 @@
+.tutor-report-card {
+  background-color: #e9effc;
+  border: 2px solid #F38223;
+  border-radius: 10px;
+  padding: 1rem;
+  height: 100%;
+  box-sizing: border-box;
+
+  font-family: "Nunito Sans", sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+}
+
+.tutor-report-card h3 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: underline;
+  margin-bottom: 0.75rem;
+}
+
+.tutor-report-item {
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-left: 5px solid #f38223;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+
+  font-size: 0.95rem;
+  color: #333;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.tutor-rating {
+  background-color: #fce7d8;
+  padding: 2px 10px;
+  border-radius: 20px;
+  border: 1px solid #f38223;
+
+  font-weight: 600;
+  color: #333;
+  font-size: 0.85rem;
+  margin-left: 6px;
+}
+
+.tutor-report-loading {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #666;
+}
+ 

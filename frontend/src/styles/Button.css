@@ -1,0 +1,80 @@
+.uta-btn {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  /* Primary = UTA Orange */
+  .uta-btn-primary {
+    background-color: #F47C20;
+    color: white;
+  }
+  
+  .uta-btn-primary:hover {
+    background-color: #d66c1c;
+  }
+  
+  /* Secondary = UTA Blue */
+  .uta-btn-secondary {
+    background-color: #0064B1;
+    color: white;
+  }
+  
+  .uta-btn-secondary:hover {
+    background-color: #004f91;
+  }
+  
+  /* Ghost = Transparent w/ border */
+  .uta-btn-ghost {
+    background: transparent;
+    color: #0064B1;
+    border: 1.5px solid #0064B1;
+  }
+  
+  .uta-btn-ghost:hover {
+    background-color: rgba(0, 100, 177, 0.1);
+  }
+
+
+
+  .uta-btn-danger {
+    background-color: #dc3545;
+    color: #fff;
+  }
+
+  .uta-btn-danger:hover {
+    background-color: #c82333;
+  }
+  
+  .uta-btn:hover {
+    opacity: 0.9;
+  }
+
+
+  /* Optional class to make any button full width */
+.uta-btn.full-width {
+    width: 100%;
+  }
+
+
+  .uta-btn:disabled,
+  .uta-btn.disabled {
+    background-color: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed;
+    border: none;
+  }
+  
+
+
+@media (max-width: 480px) {
+    .uta-btn {
+      width: 100%;
+    }
+}  
+  
+  

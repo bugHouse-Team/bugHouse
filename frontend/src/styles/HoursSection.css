@@ -1,0 +1,75 @@
+/* Outer container: no scrolling here */
+.subSectionContainer {
+    background-color: #e9effc;
+    border: 1px solid #f38223;
+    border-radius: 22px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    /* Remove: height, overflow-y */
+    /* Let the box's height expand naturally */
+    overflow: visible; 
+  }
+
+  .subSectionContainer::-webkit-scrollbar {
+    display: none; /* or remove entirely */
+  }
+  
+  /* Inner scrollable container */
+  .scrollInner {
+    /* Takes full available height */
+    height: 80%;
+    
+    /* Enable scrolling only in the inner container */
+    overflow-y: auto;
+    overflow-x: hidden;
+  
+    /* Trick to move scrollbar inward:
+       - Negative right margin shifts the scrollbar track left
+       - Matching right padding ensures content doesn't get hidden */
+    margin-right: -1rem;
+    padding-right: 1rem;
+    box-sizing: border-box;
+
+    /* Firefox scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #f38223 #e9effc;
+  }
+  
+  /* Style your scrollbar inside .scrollInner */
+  .scrollInner::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollInner::-webkit-scrollbar-thumb {
+    background-color: #f38223;
+    border-radius: 10px;
+  }
+  
+  .scrollInner::-webkit-scrollbar-track {
+    background: #e9effc;
+  }
+  
+  /* Existing styles for your content */
+  .sectionTitle {
+    color: #000;
+    margin-bottom: 0.5rem;
+    font-family: Nunito Sans, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration-line: underline;
+  }
+  
+  .regularHours {
+    color: #000;
+    margin-bottom: 0.5rem;
+    font-family: Nunito Sans, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+  }
+  
+  .regularHours ul {
+    padding-left: 1rem; /* or adjust as you like */
+    margin-left: 0;     /* remove negative margin */
+  }
+  
