@@ -1,0 +1,48 @@
+.sectionContainer {
+  background-color: #e9effc;
+  border: 1px solid #f38223;
+  border-radius: 22px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  height: 30vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Ensures everything inside is centered horizontally */
+}
+
+.sectionTitle {
+  color: #000;
+  font-family: Nunito Sans;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration-line: underline;
+  margin-top: 0px;
+  text-align: center; /* Center title text */
+}
+
+.imagesContainer {
+  display: flex;
+  flex-direction: column; /* Stack elements */
+  justify-content: center; /* Centers content vertically */
+  align-items: center; /* Centers content horizontally */
+  flex-grow: 1; /* Ensures it fills the available space */
+  width: 100%;
+  position: relative;
+}
+
+.squareImage {
+  width: 100%;
+  height: auto;
+  max-height: 95%;
+  border-radius: 14%;
+  display: block;
+  align-self: center; /* Center the image */
+  object-fit: contain;
+  transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+}
+
+/* Sliding effect */
+.slide-animation {
+  transform: translateX(100%);
+  opacity: 0;
+}

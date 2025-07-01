@@ -1,0 +1,74 @@
+.student-left-panel {
+    position: fixed;
+    top: 6vh;
+    bottom: 1vh;
+    left: 2vh;
+    right: 36vh;
+    
+    background-color: #204eb1;
+    border: 5px solid #f38223;
+    border-radius: 23px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+  
+  /* Full column spanning both rows */
+  .student-profile-chat-container {
+    grid-column: 1 / 2;
+    grid-row: 1 / 3; /* spans both rows */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Profile fixed height */
+  .student-profile {
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    height: 170px;
+    overflow: auto;
+  }
+  
+  /* Chat takes remaining space */
+  .student-attendance {
+    background-color: #d0d0d0;
+    border-radius: 10px;
+    background-color: #9AABD0;
+    border: 2px solid #F38223;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    text-align: center;
+  }
+  
+  /* Other unchanged areas */
+  .student-appointments {
+    grid-column: 2 / 3;
+    grid-row: 1;
+    background-color: #f0e4e4;
+    border-radius: 10px;
+    height: 350px;
+    overflow: auto;
+  }
+  
+  .student-available-turors {
+    grid-column: 3 / 4;
+    grid-row: 1;
+    background-color: #e4f0f7;
+    border-radius: 10px;
+    height: 350px;
+    overflow: auto;
+  }
+  
+  .student-calendar { /* this is probably incorrect */ 
+    grid-column: 2 / 4;
+    grid-row: 2;
+    background-color: #ccc;
+    border-radius: 10px;
+  }

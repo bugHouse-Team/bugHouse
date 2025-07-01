@@ -1,0 +1,21 @@
+.info-panel{
+  position: fixed;
+  right: 2vh;
+  top: 6vh;
+  bottom: 1vh;
+
+  width: 27vh; 
+  background-color: #204eb1;
+  
+  /* Border and Styling */
+  border-style: solid;
+  border-width: 5px;
+  border-color: #f38223;
+  border-radius: 23px;
+  
+  /* Layout */
+  flex-direction: column;
+  padding: 1.5rem;
+  display: flex;
+}
+

@@ -1,0 +1,234 @@
+.calendar-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-container {
+  flex: 1;
+  height: 100%;
+}
+
+.calendar {
+  width: 100%;
+  height: 100%;
+  border: 2px solid #F38223;
+  font-family: sans-serif;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 50px;
+  padding: 0 10px;
+  background-color: #E9EFFC;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.calendar-header button {
+  background: #F38223;
+  font-size: 16px;
+  text-align: center;
+  color: white;
+  border: none;
+  width: 40px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.calendar-header button:hover {
+  background: #ccc;
+}
+
+.calendar-day-names {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.calendar-day-name {
+  text-align: center;
+  font-weight: bold;
+  padding: 6px;
+  background-color: #f5c8b5;
+
+  /*added to make it stay on top of calendar, could be fixed with spacing changes */
+  z-index: 800;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+  flex: 1;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.calendar-day {
+  padding: 6px;
+  border: 1px solid #e5dddd;
+  background-color: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
+.calendar-day.empty {
+  background: #e7e7e7;
+}
+
+.calendar-day.today {
+  background: #d0f0ff;
+  border: 1px solid #00aaff;
+}
+
+.calendar-day > span {
+  font-weight: bold;
+  font-size: 12px;
+  margin-bottom: 1px;
+}
+
+.event {
+  color: white;
+  margin-top: 2px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  cursor: pointer;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Events are variable color */
+
+.event:nth-child(odd) {
+  background: #007bff; /* Blue for odd events */
+}
+
+.event:nth-child(odd):hover {
+  background: #0056b3; 
+}
+
+.event:nth-child(even) {
+  background: #f47c2c; /* Orange for even events */
+}
+
+.event:nth-child(even):hover {
+  background: #e76419; /* Slightly darker, warm orange for hover */
+}
+
+.events-container {
+  flex:1;
+  overflow-y: auto; /* Enables scrolling */
+
+  max-height: 42px; /* Do not increase this or else it causes days with more than 2 events to increase the entire size of the calendar past the leftpanel container */
+  /* Should probably be dynamically calculated in the future but I can't figure out how */
+
+  min-height: 0;
+  scrollbar-width: none;
+}
+
+/* Style your scrollbar inside .events-container */
+.events-container::-webkit-scrollbar {
+  width: 2px;
+}
+
+.events-container::-webkit-scrollbar-thumb {
+  background-color: #f38223;
+  border-radius: 10px;
+}
+
+ 
+
+.calendar-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+  */
+.calendar-modal h3 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  text-align: center;
+}
+ 
+.calendar-modal ul {
+  padding-left: 1rem;
+}
+
+.calendar-modal button {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.calendar-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.calendar-modal {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.calendar-modal h3 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.calendar-modal ul {
+  padding-left: 1rem;
+}
+
+.calendar-modal button {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}

@@ -1,0 +1,38 @@
+.subSectionContainer {
+    background-color: #e9effc;
+    border: 1px solid #f38223;
+    border-radius: 22px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+
+    /* Fixed height & width */
+    height: 23vh; /* Adjust as needed */
+    
+
+    /* Enable scrolling for the entire box */
+    overflow-y: auto; 
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+
+}
+
+.subSectionTitle {
+    color: #000;
+    margin-bottom: 0.5rem;
+    font-family: Nunito Sans;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration-line: underline;
+  }
+
+  .supportText {
+    color: #000;
+    font-family: Nunito Sans;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  
+  .supportItem {
+    margin-bottom: 0.5rem;
+    color: #000;
+    text-align: left;
+  }
