@@ -1,0 +1,92 @@
+.todays-slots-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.todays-slots-box {
+  position: relative;
+  background-color: #E9EFFC;
+  border: 2px solid #F38223;
+  border-radius: 10px;
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Title */
+.todays-slots-box h2 {
+  text-align: center;
+  color: #333;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  text-decoration: underline;
+}
+
+/* Scrollable slots list */
+.todays-slots-scroll {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 3.5rem; /* leave space for fixed buttons */
+}
+
+/* WebKit scrollbar */
+.todays-slots-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.todays-slots-scroll::-webkit-scrollbar-thumb {
+  background-color: #f38223;
+  border-radius: 4px;
+}
+.todays-slots-scroll::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+/* Slot items */
+.todays-slots-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.todays-slots-box li {
+  padding: 8px;
+  margin-bottom: 8px;
+  background-color: #fff;
+  border: 1px solid transparent;
+  border-left: 5px solid #f38223;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  text-align: left;
+}
+
+.todays-slots-box li:hover {
+  background-color: #fce7d8;
+}
+
+.todays-slots-box li.selected {
+  background-color: #fce7d8;
+  border-color: #F38223;
+}
+
+/* Empty state */
+.no-appointments {
+  font-style: italic;
+  text-align: center;
+  color: #666;
+  margin-top: 1rem;
+}
+
+/* Fixed Action Button Container */
+.todays-action-buttons {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+ 
