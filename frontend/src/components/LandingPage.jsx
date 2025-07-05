@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import axios from "axios";
 import HeaderBar from "./HeaderBar";
 import "../styles/LandingPage.css";
@@ -11,14 +11,24 @@ function LandingPage() {
     const [userObject, setUserObject] = useState({}); // User object
     const [swipeMode, setSwipeMode] = useState(true); // Toggle between swipe/manual
     const [manualId, setManualId] = useState(""); // Manually entered ID
+    const [userName, setUserName] = useState("");
+    const [userClass, setUserClass] = useState("");
     const [error, setError] = useState(""); // Error message
     const [loading, setLoading] = useState(true); // Track loading state
-    const [authenticated, setAuthenticated] = useState(false); // Track if user is verified
-    const [role, setRole] = useState(""); // Store user role
+    const [authenticated, setAuthenticated] = useState(false);
+    const [registerMode, setRegisterMode] = useState(false) // Track if user is verified
+    const [role, setRole] = useState("");
+    const [userEmail, setUserEmail] = useState("");
+    const [regInputEmail, setRegInputEmail] = useState("");
+    const [regInputID, setRegInputID] = useState(""); // Store user role
     const navigate = useNavigate();
-    const userEmail = localStorage.getItem("emailForSignIn");
-
+    
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
+    useEffect(() => {
+        const storedEmail = localStorage.getItem("emailForSignIn") || "";
+        setUserEmail(storedEmail);
+    }, []);
 
     // ✅ Fetch User Data on Page Load
     useEffect(() => {
@@ -100,43 +110,17 @@ function LandingPage() {
         if (inputId !== storedId) {
             if(storedId === "")
             {
-                axios.post(`${API_URL}/api/users`, {
-                    email: userEmail,
-                    name: userEmail,
-                    idNumber: inputId,
-                    gradeLevel: "Senior",
-                    role: "Student"
-                })
-                .then((response) => {
-                    if (response.data) {
-                        console.log("✅ User created:", response.data.user);
-                        setUserObject(response.data.user);
-                        setStoredId(inputId);
-                        setRole(response.data.user.role);
-                        localStorage.setItem("role", response.data.user.role)
-
-                        console.log("✅ Authentication Successful!");
-                        setAuthenticated(true);
-                        localStorage.setItem("user", JSON.stringify(userObject));
-                        window.location.href = getDashboardPath(userObject.role);
-                    } else {
-                        console.error("❌ Failed to create user: No data returned");
-                    }
-                })
-                .catch((err) => {
-                    console.error("❌ Error creating user:", err.response?.data?.message || err.message);
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-
-
-            } else
+                setRegInputEmail(userEmail);
+                setRegInputID(inputId);
+                setStoredId(inputId);
+                setUserClass("Freshman");
+                setRegisterMode(true);
+            }
+            else
             {
                 console.log("this is inputId ", inputId, " and this is storedId ", storedId);
                 setError(`❌ ID did not match. Expected: ${storedId}, Got: ${inputId}`);
             }
-
             
         } else
         {
@@ -147,6 +131,36 @@ function LandingPage() {
         }
 
         
+
+    };
+
+    const registerUser = () => {
+        axios.post(`${API_URL}/api/users`, {
+            email: regInputEmail,
+            name: userName,
+            idNumber: regInputID,
+            gradeLevel: userClass,
+            role: "Student"
+        })
+        .then((response) => {
+            if (response.data) {
+                setAuthenticated(true);
+                console.log("✅ User created:", response.data.user);
+                console.log("✅ Authentication Successful!");
+                localStorage.setItem("role", response.data.user.role)
+                localStorage.setItem("user", JSON.stringify(response.data.user));
+                window.location.href = getDashboardPath(response.data.user.role);
+            } else {
+                console.error("❌ Failed to create user: No data returned");
+            }
+        })
+        .catch((err) => {
+            console.error("❌ Error creating user:", err.response?.data?.message || err.message);
+        })
+        .finally(() => {
+            setLoading(false);
+        });
+
 
     };
 
@@ -170,51 +184,124 @@ function LandingPage() {
         <div className="landing-page">
             <HeaderBar />
             <div className="content">
-                <h1>Authentication Required</h1>
+                {!registerMode && <>
+                    <h1>Authentication Required</h1>
+                    
+                    {/* Authentication Modal */}
+                    <div className="auth-modal">
+                        <h2>Verify Your Identity</h2>
+                        <p>Select a method to authenticate:</p>
 
-                {/* Authentication Modal */}
-                <div className="auth-modal">
-                    <h2>Verify Your Identity</h2>
-                    <p>Select a method to authenticate:</p>
-
-                    {/* Toggle Between Swipe and Manual Entry */}
-                    <div className="auth-options">
-                        <button
-                            className={swipeMode ? "active" : ""}
-                            onClick={() => setSwipeMode(true)}
-                            disabled={loading}
-                        >
-                            Swipe ID
-                        </button>
-                        <button
-                            className={!swipeMode ? "active" : ""}
-                            onClick={() => setSwipeMode(false)}
-                            disabled={loading}
-                        >
-                            Enter ID Manually
-                        </button>
-                    </div>
-
-                    {swipeMode ? (
-                        <p>Swipe your ID card using the scanner.</p>
-                    ) : (
-                        <>
-                            <label htmlFor="manual-id">Enter ID:</label>
-                            <input
-                                type="text"
-                                id="manual-id"
-                                value={manualId}
-                                onChange={(e) => setManualId(e.target.value)}
+                        {/* Toggle Between Swipe and Manual Entry */}
+                        <div className="auth-options">
+                            <button
+                                className={swipeMode ? "active" : ""}
+                                onClick={() => setSwipeMode(true)}
                                 disabled={loading}
-                            />
-                            <button onClick={() => verifyId(manualId)} disabled={loading}>
-                                Confirm
+                            >
+                                Swipe ID
                             </button>
-                        </>
-                    )}
+                            <button
+                                className={!swipeMode ? "active" : ""}
+                                onClick={() => setSwipeMode(false)}
+                                disabled={loading}
+                            >
+                                Enter ID Manually
+                            </button>
+                        </div>
 
-                    {error && <p className="error-text">{error}</p>}
-                </div>
+                        {swipeMode ? (
+                            <p>Swipe your ID card using the scanner.</p>
+                        ) : (
+                            <>
+                                <label htmlFor="manual-id">Enter ID:</label>
+                                <input
+                                    type="text"
+                                    id="manual-id"
+                                    value={manualId}
+                                    onChange={(e) => setManualId(e.target.value)}
+                                    disabled={loading}
+                                />
+                                <button onClick={() => verifyId(manualId)} disabled={loading}>
+                                    Confirm
+                                </button>
+                            </>
+                        )}
+
+                        {error && <p className="error-text">{error}</p>}
+                    </div>
+                    </>
+                }
+                {registerMode && 
+                    <div className="register-modal">
+                        <h1>User Registration</h1>
+                        <table className="register-table">
+                            <tbody>
+                                <tr>
+                                    <td><label htmlFor="user-email">Email:</label></td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            id="user-email"
+                                            value={regInputEmail}
+                                            onChange={(e) => setRegInputEmail(e.target.value)}
+                                            disabled={userEmail !== null && userEmail !== ""}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label htmlFor="user-id">ID:</label></td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            id="user-id"
+                                            value={regInputID}
+                                            onChange={(e) => setRegInputID(e.target.value)}
+                                            disabled={storedId !== null && storedId !== ""}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label htmlFor="user-name">Enter Username:</label></td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            id="user-name"
+                                            value={userName}
+                                            onChange={(e) => setUserName(e.target.value)}
+                                            disabled={loading}
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label htmlFor="user-class">Enter Class:</label></td>
+                                    <td>
+                                        <select
+                                            id="user-class"
+                                            onChange={(e) => setUserClass(e.target.value)}
+                                            disabled={loading}
+                                        >
+                                            <option value="Select">Select</option>
+                                            <option value="Freshman">Freshman</option>
+                                            <option value="Sophomore">Sophomore</option>
+                                            <option value="Junior">Junior</option>
+                                            <option value="Senior">Senior</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <button onClick={() => registerUser()} disabled={loading}>
+                                            Register
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
 
                 {authenticated && <p>✅ Authentication Successful! Redirecting...</p>}
             </div>
