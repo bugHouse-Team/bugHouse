@@ -20,7 +20,7 @@
    - **Firebase (Admin Only)**: Sign up at [Firebase Console](https://console.firebase.google.com/u/0/).
    - **MongoDB Atlas (All DB Users)**: Create an account at [MongoDB Atlas](https://cloud.mongodb.com/).
 
-## Databse Setup
+## Database Setup
 
 - **Firebase**
    1. Create Firebase project
