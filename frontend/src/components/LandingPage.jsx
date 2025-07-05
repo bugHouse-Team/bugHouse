@@ -98,24 +98,55 @@ function LandingPage() {
         console.log("Input ID:", inputId);
 
         if (inputId !== storedId) {
-            console.log("this is inputId ", inputId, " and this is storedId ", storedId);
-            setError(`❌ ID did not match. Expected: ${storedId}, Got: ${inputId}`);
-            return;
+            if(storedId === "")
+            {
+                axios.post(`${API_URL}/api/users`, {
+                    email: userEmail,
+                    name: userEmail,
+                    idNumber: inputId,
+                    gradeLevel: "Senior",
+                    role: "Student"
+                })
+                .then((response) => {
+                    if (response.data) {
+                        console.log("✅ User created:", response.data.user);
+                        setUserObject(response.data.user);
+                        setStoredId(inputId);
+                        setRole(response.data.user.role);
+                        localStorage.setItem("role", response.data.user.role)
+
+                        console.log("✅ Authentication Successful!");
+                        setAuthenticated(true);
+                        localStorage.setItem("user", JSON.stringify(userObject));
+                        window.location.href = getDashboardPath(userObject.role);
+                    } else {
+                        console.error("❌ Failed to create user: No data returned");
+                    }
+                })
+                .catch((err) => {
+                    console.error("❌ Error creating user:", err.response?.data?.message || err.message);
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+
+
+            } else
+            {
+                console.log("this is inputId ", inputId, " and this is storedId ", storedId);
+                setError(`❌ ID did not match. Expected: ${storedId}, Got: ${inputId}`);
+            }
+
+            
+        } else
+        {
+            console.log("✅ Authentication Successful!");
+            setAuthenticated(true);
+            localStorage.setItem("user", JSON.stringify(userObject));
+            window.location.href = getDashboardPath(userObject.role);
         }
 
-        console.log("✅ Authentication Successful!");
-        setAuthenticated(true);
-
-
-        // Store User info in Local Storage
-        localStorage.setItem("user", JSON.stringify(userObject));
-
-        // ✅ Redirect to the respective dashboard
-        // setTimeout(() => {
-        //     navigate(getDashboardPath(role));
-        // }, 1500);
-
-        window.location.href = getDashboardPath(userObject.role);
+        
 
     };
 
