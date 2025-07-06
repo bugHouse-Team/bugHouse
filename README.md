@@ -57,11 +57,11 @@
 2. **Run build_deploy.sh**:
    - Windows (GitBash)
       ```bash
-      sh build_deploy.sh
+      sh ./build_deploy.sh
       ```
    - Linux/Mac
       ```bash
-      build_deploy.sh
+      ./build_deploy.sh
       ```
 
 3. **Enter MongoDB Connection String (initial setup only)** :
