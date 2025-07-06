@@ -9,9 +9,7 @@
 - Analytics
 
 ### Developer Instructions
-- Direct pushes into `main` and `develop` are restricted. You must create a pull request.
-- `main` is intended to be a release branch.
-- `develop` is intended to be a working branch.
+- Direct pushes into `main` are restricted. You must create a pull request.
 
 ## Prerequisites
 
@@ -56,11 +54,15 @@
    cd bugHouse
    ```
 
-2. **Run build_deploy.bat**:
-
-   ```bash
-   .\build_deploy.bat
-   ```
+2. **Run build_deploy.sh**:
+   - Windows (GitBash)
+      ```bash
+      sh build_deploy.sh
+      ```
+   - Linux/Mac
+      ```bash
+      build_deploy.sh
+      ```
 
 3. **Enter MongoDB Connection String (initial setup only)** :
    i.e.
@@ -81,4 +83,3 @@
 ## Troubleshooting
 
 - **Port Conflicts**: Ensure no other applications are running on port 5000 or 3000.
-
