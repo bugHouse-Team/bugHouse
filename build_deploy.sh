@@ -67,7 +67,7 @@ fi
 
 
 
-# Wait for the backend service (assumed on http://localhost:3000)
+# Wait for the frontend service (assumed on http://localhost:3000)
 echo "Waiting for http://localhost:3000 to be ready..."
 timeout=60
 elapsed=0
