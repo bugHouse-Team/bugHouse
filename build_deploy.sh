@@ -16,8 +16,17 @@ NODE_ENV=development
 REACT_APP_API_URL=http://localhost:5000
 EOF
 
+  # Prompt for Google service account JSON path
+  read -p "Enter the full path to your Google Service Account JSON file: " GOOGLE_JSON_PATH
+  if [ ! -f "$GOOGLE_JSON_PATH" ]; then
+    echo "Error: File not found at $GOOGLE_JSON_PATH"
+    exit 1
+  fi
+  echo "GOOGLE_SERVICE_ACCOUNT_JSON=$GOOGLE_JSON_PATH" >> "$ENV_FILE"
+
   echo ".env file created successfully."
 fi
+
 
 # Start Docker Desktop if needed (macOS or Windows only)
 echo "Checking Docker status..."
