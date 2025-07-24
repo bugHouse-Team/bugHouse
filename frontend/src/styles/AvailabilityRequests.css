@@ -1,0 +1,156 @@
+/* === AvailabilityRequests.css === */
+
+.availability-container {
+    background-color: #e9effc;
+    border: 2px solid #f47c20;
+    border-radius: 22px;
+    margin-top: 1rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    font-family: "Nunito Sans", sans-serif;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .availability-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+    text-align: center;
+    text-decoration: underline;
+  }
+  
+  /* Scrollable container */
+  .availability-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+  }
+  
+  /* Entry card */
+  .availability-entry {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 16px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Entry header */
+  .availability-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #333;
+  }
+  
+  .tutor-name {
+    color: #1d3c78;
+  }
+  
+  .day-count {
+    font-size: 0.9rem;
+    color: #555;
+  }
+  
+  /* Schedule breakdown */
+  .availability-details {
+    margin-top: 0.5rem;
+    padding-left: 1.2rem;
+    list-style-type: disc;
+    font-size: 0.88rem;
+    color: #333;
+  }
+  
+  .availability-details li {
+    margin-bottom: 0.4rem;
+  }
+  
+  .time-block {
+    display: inline-block;
+    margin-bottom: 2px;
+  }
+  
+  /* Action buttons */
+  .action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  
+  .approve,
+  .deny {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1.15rem;
+    padding: 6px;
+    border-radius: 50%;
+    transition: transform 0.2s, color 0.2s;
+  }
+  
+  .approve:hover {
+    color: green;
+    transform: scale(1.15);
+  }
+  
+  .deny:hover {
+    color: red;
+    transform: scale(1.15);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   AVAILABILITY REQUESTS – keep same width as the calendar,
+   fixed overall height, and use a horizontal scrollbar.
+   ─────────────────────────────────────────────────────────── */
+
+/* 1️⃣  Container: stretch to the full width of .calendarColumn */
+/* 1️⃣  The blue container itself */
+.calendarColumn .availability-container {
+  width: 95%;        /* ← whatever width you chose earlier         */
+  max-width: 95%;    /* prevent growth when cards overflow          */
+  flex-shrink: 0;    /* don’t let flexbox enlarge the parent column */
+  box-sizing: border-box;
+}
+
+/* 2️⃣  The inner scroll strip */
+.calendarColumn .availability-scroll {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;   /* horizontal scrollbar                       */
+  overflow-y: hidden; /* no vertical scroll                         */
+  min-width: 0;       /* ✨ MOST IMPORTANT — lets it respect max‑width */
+}
+
+.calendarColumn .availability-scroll::-webkit-scrollbar-thumb {
+  background-color: #f38223;
+  border-radius: 10px;
+}
+.calendarColumn .availability-scroll::-webkit-scrollbar-track {
+  background: #e9effc;
+}
+
+/* — Firefox — */
+.calendarColumn .availability-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #f38223 #e9effc;  /* thumb / track */
+}
+
+/* 3️⃣  Each card keeps the old fixed width */
+.calendarColumn .availability-entry {
+  flex: 0 0 340px;   /* fixed‑width card that won’t stretch parent   */
+}
+
+/* 4️⃣  “No pending requests” message still occupies height */
+.calendarColumn .availability-text {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+  line-height: 16vh;    /* ~ (min‑height – padding) for centering */
+  white-space: normal;  /* allow wrapping                      */
+}

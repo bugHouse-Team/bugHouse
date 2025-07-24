@@ -1,0 +1,83 @@
+/* Set the entire background with an image and light blue overlay */
+body {
+    background: url('../assets/images/school.png') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center;    /* Center vertically */
+    height: 100vh;          /* Full viewport height */
+}
+
+/* Style the container for the form */
+.signup-container {
+    width: 100%;
+    max-width: 400px;
+    background-color: #60a9f8; /* Light blue background */
+    padding: 20px;
+    border: 2px solid orange; /* Orange border */
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Headings inside the sign-up container */
+.signup-container h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Input fields */
+.signup-container input {
+    width: 90%;
+    padding: 10px;
+    margin: 10px auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    display: block; /* Center the input */
+}
+
+/* Sign-up button */
+.signup-container button {
+    background-color: orange;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.signup-container button:hover {
+    background-color: darkorange;
+}
+
+/* Link to Sign In */
+.signup-container .existing-user {
+    margin-top: 15px; /* Reduced margin for closer vertical spacing */
+}
+
+.signup-container .existing-user p {
+    font-size: 14px;
+    color: #ffffff;
+    margin-bottom: 5px; /* Closer spacing to the "Sign In" button */
+}
+
+.signup-container .existing-user button {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.signup-container .existing-user button:hover {
+    background-color: #aac4df;
+}

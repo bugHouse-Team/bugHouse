@@ -1,0 +1,15 @@
+# Ignore all node_modules in frontend, backend, and root
+node_modules/
+
+# Ignore sensitive files
+.env
+
+# Ignore system files
+.DS_Store
+
+# Ignore logs
+logs/
+*.log
+
+# Ignore uploaded profile images (Profile component addition)
+/uploads/

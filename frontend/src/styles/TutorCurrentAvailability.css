@@ -1,0 +1,129 @@
+.availability-card {
+  background-color: #e9effc;
+  border: 2px solid #F38223;
+  border-radius: 10px;
+  width: 100%;
+  height: 100%;
+  font-family: "Nunito Sans", sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  box-sizing: border-box;
+  position: relative; 
+  overflow-y: auto;
+}
+
+.availability-card h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: underline;
+  margin-bottom: 1rem;
+}
+
+.availability-card p {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 1.2rem;
+}
+
+.schedule-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.schedule-list li {
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-left: 5px solid #f38223;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.schedule-list li strong {
+  display: inline-block;
+  min-width: 80px;
+  color: #204eb1;
+}
+
+.schedule-list .time-slot {
+  display: inline-block;
+  background-color: #fce7d8;
+  color: #333;
+  border-radius: 15px;
+  padding: 2px 10px;
+  font-size: 0.85rem;
+  margin: 2px 5px 2px 0;
+  border: 1px solid #f38223;
+}
+
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.availability-card .tutor-empty-state {
+  margin-top: auto;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.availability-card .tutor-empty-state button {
+  margin-top: 0.75rem;
+}
+
+.add-availability-btn-container {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+}
+
+
+.availability-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.status-label {
+  color: #333;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.approved {
+  background-color: #d6f5e7;
+  color: #15803d;
+  border: 1px solid #15803d;
+}
+
+.status-badge.pending {
+  background-color: #fff4e6;
+  color: #d97706;
+  border: 1px solid #f38223;
+}
+
+
+
+
+
+
