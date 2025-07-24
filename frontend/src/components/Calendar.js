@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import "../styles/Calendar.css";
+import { useNavigate } from "react-router-dom";
+
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
@@ -10,19 +12,50 @@ const Calendar = ({ user, isAdmin, isTutor }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [showModal, setShowModal] = useState(false);
-
+  const navigate = useNavigate();
+  const token = localStorage.getItem("firebase_token");
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
         let res;
 
         if (isAdmin) {
-          res = await axios.get(`${API_URL}/api/admin/appointments`);
+          res = await axios.get(`${API_URL}/api/admin/appointments`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
         } else if(isTutor) {
-          res = await axios.get(`${API_URL}/api/tutors/${user.id}/bookings`);
+          res = await axios.get(`${API_URL}/api/tutors/${user.id}/bookings`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
         }
          else if (user?.id) {
-          res = await axios.get(`${API_URL}/api/students/${user.id}/bookings`);
+          res = await axios.get(`${API_URL}/api/students/${user.id}/bookings`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
         } else {
           return;
         }

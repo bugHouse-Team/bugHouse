@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../styles/StudentAttendance.css";
+import { useNavigate } from "react-router-dom";
+
 
 
 const StudentAttendance = ({ user }) => {
   const [attendanceLog, setAttendanceLog] = useState([]);
+  const navigate = useNavigate();
+  const token = localStorage.getItem("firebase_token");
 
   useEffect(() => {
     console.log("📌 StudentAttendance mounted");
@@ -15,10 +19,20 @@ const StudentAttendance = ({ user }) => {
     const logAttendance = async () => {
       try {
         console.log("📤 Sending POST to log attendance...");
-        await axios.post("/api/students/attendance/log", {
+        await axios.post("/api/students/attendance/log",{},{headers: {
+          Authorization: `Bearer ${token}`,
+        }}, {
           email: user.email,
           type: "Sign In",
-        });
+        }).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
         console.log("✅ Attendance logged");
         fetchAttendance();
       } catch (err) {
@@ -29,7 +43,17 @@ const StudentAttendance = ({ user }) => {
     const fetchAttendance = async () => {
       try {
         console.log("📥 Fetching attendance history...");
-        const res = await axios.get(`/api/students/attendance/${user.email}`);
+        const res = await axios.get(`/api/students/attendance/${user.email}`,{headers: {
+          Authorization: `Bearer ${token}`,
+        }},).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
         console.log("📊 Fetched attendance:", res.data);
         setAttendanceLog(res.data);
       } catch (err) {

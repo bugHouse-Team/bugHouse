@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-
+import { useNavigate } from "react-router-dom";
 // UI Components
 import HeaderBar from "./HeaderBar";
 import Modal from "./ui/Modal";
@@ -22,6 +22,10 @@ function TutorDashboard({ user }) {
   const [availabilityKey, setAvailabilityKey] = useState(0); // Used to re-render after update
   const userEmail = localStorage.getItem("emailForSignIn");
 
+  const token = localStorage.getItem("firebase_token");
+
+  const navigate = useNavigate();
+  
   const handleNewRequest = () => {
     setIsModalOpen(true);
   };

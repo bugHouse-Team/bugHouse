@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
 const User = require("../models/User");
+const { verifyAdmin, authenticate } = require("../middleware/auth");
 
 // Configure persistent upload directory
 const UPLOAD_BASE = '/persistent/uploads';

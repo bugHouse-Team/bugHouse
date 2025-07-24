@@ -6,10 +6,13 @@ import TodaysAvailableSlots from "./TodaysAvailableSlots";
 import Calendar from "./Calendar";
 import Profile from "./Profile";
 import StudentAttendance from "./StudentAttendance";
+import { useNavigate } from "react-router-dom";
 
 import "../styles/StudentDashboard.css";
 
 const StudentDashboard = ({ user }) => {
+  const navigate = useNavigate();
+  
   const [refreshAppointmentsFlag, setRefreshAppointmentsFlag] = useState(false);
 
   const triggerRefreshAppointments = () => {

@@ -5,7 +5,6 @@ import UTAlogo from "../assets/images/UTA.png";
 import "../styles/HeaderBar.css";
 
 function HeaderBar() {
-    const navigate = useNavigate();
     const [storedId, setStoredId] = useState(""); // ID from database
     const [error, setError] = useState(""); // Error message
     const [showModal, setShowModal] = useState(false); // Controls modal visibility
@@ -16,13 +15,16 @@ function HeaderBar() {
     const [loading, setLoading] = useState(true); // ✅ Track loading state
     const [selectedView, setSelectedView] = useState(localStorage.getItem("view") || "Student");
     const [role, setRole] = useState("");
-
+    const navigate = useNavigate();
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+    const token = localStorage.getItem("firebase_token");
 
     useEffect(() => {
         if (userEmail) {
             console.log("🔄 Fetching user data for:", userEmail);
-            axios.get(`${API_URL}/api/users/email/${userEmail}`)
+            axios.get(`${API_URL}/api/users/email/${userEmail}`,{headers: {
+                Authorization: `Bearer ${token}`,
+            },})
                 .then((response) => {
                     console.log("✅ Full API Response:", response.data); // ✅ Debugging
     
@@ -34,7 +36,15 @@ function HeaderBar() {
                         console.error("❌ ID not found in API response for", userEmail);
                     }
                 })
-                .catch((err) => console.error("❌ Error fetching user data:", err))
+                .catch((err) => {
+                    const status = err.response?.status;
+                    if (status === 302) {
+                        console.warn("🚫 302 Error - redirecting to login...");
+                        navigate("/signin");
+                    } else {
+                        console.error("❌ Error fetching user data:", err);
+                    }
+                })
                 .finally(() => {
                     setLoading(false); // ✅ Mark API call as complete
                 });
@@ -150,7 +160,9 @@ function HeaderBar() {
     
         try {
             if (email) {
-                await axios.post(`${API_URL}/api/students/attendance/log`, {
+                await axios.post(`${API_URL}/api/students/attendance/log`,{}, {headers: {
+                Authorization: `Bearer ${token}`,
+            }}, {
                     email,
                     type: "Sign Out",
                 });

@@ -7,6 +7,7 @@ import AvailabilityRequests from "./AvailabilityRequests";
 import Profile from "./Profile";
 import Calendar from "./Calendar";
 import "../styles/AdminDashboard.css"; //leftPanel is in InfoPanel
+import { useNavigate } from "react-router-dom";
 
 const ProfileWrapper = ({ children }) => (
   <div className="profileBlock">{children}</div>

@@ -6,6 +6,13 @@ const generateSlots = require('../services/slotService');
 // GET /api/admin/availability/pending
 exports.getPendingAvailabilities = async (req, res) => {
   try {
+    if (
+      req.user.role !== "Admin" &&
+      req.user.role !== "SysAdmin"
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const pending = await TutorAvailability.find({ isApproved: false }).populate('tutorId', 'name email idNumber gradeLevel');
     
     // Normalize tutorId to `tutor` for frontend consistency
@@ -24,6 +31,13 @@ exports.getPendingAvailabilities = async (req, res) => {
 // PATCH /api/admin/availability/:availabilityId/approve
 exports.approveAvailability = async (req, res) => {
   try {
+    if (
+      req.user.role !== "Admin" &&
+      req.user.role !== "SysAdmin"
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const { availabilityId } = req.params;
     const availability = await TutorAvailability.findById(availabilityId);
 
@@ -52,6 +66,13 @@ exports.approveAvailability = async (req, res) => {
 // DELETE /api/admin/availability/:availabilityId
 exports.deleteAvailability = async (req, res) => {
   try {
+    if (
+      req.user.role !== "Admin" &&
+      req.user.role !== "SysAdmin"
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const { availabilityId } = req.params;
 
     const deleted = await TutorAvailability.findByIdAndDelete(availabilityId);
@@ -71,6 +92,12 @@ exports.deleteAvailability = async (req, res) => {
 
 // GET /api/admin/appointments
 exports.getAllAppointments = async (req, res) => {
+  if (
+      req.user.role !== "Admin" &&
+      req.user.role !== "SysAdmin"
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
   try {
     const bookings = await Slot.find({ isBooked: true })
       .populate("studentId", "name email")

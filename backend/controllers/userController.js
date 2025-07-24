@@ -27,6 +27,15 @@ exports.createUser = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     const { email } = req.query;
+    
+    if (
+      req.user.role !== "Admin" &&
+      req.user.role !== "SysAdmin"
+    ) {
+      const users = await User.findById(req.user.id);
+      return res.status(201).json(users);
+    }
+    
     const users = email
       ? await User.find({ email })
       : await User.find();
@@ -39,8 +48,18 @@ exports.getAllUsers = async (req, res) => {
 // GET /api/users/email/:email
 exports.getUserByEmail = async (req, res) => {
   try {
+    
     const user = await User.findOne({ email: req.params.email });
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (
+      req.user.role !== "Admin" &&
+      req.user.role !== "SysAdmin" &&
+      req.user.id !== user.id
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch user by email' });
@@ -51,16 +70,36 @@ exports.getUserByEmail = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Allow only Admins or the user themselves
+    if (
+      req.user.role !== "Admin" &&
+      req.user.role !== "SysAdmin" &&
+      req.user.id !== user.id
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     res.json(user);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch user by ID' });
+    res.status(500).json({ message: "Failed to fetch user by ID" });
   }
 };
 
 // PUT /api/users/:userId
 exports.updateUser = async (req, res) => {
   try {
+
+    // Allow only Admins or the user themselves
+    if (
+      req.user.role !== "Admin" &&
+      req.user.role !== "SysAdmin" &&
+      req.user.id !== req.params.userId
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const user = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true });
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json({ message: 'User updated', user });
@@ -72,6 +111,14 @@ exports.updateUser = async (req, res) => {
 // DELETE /api/users/:userId
 exports.deleteUser = async (req, res) => {
   try {
+    if (
+      req.user.role !== "Admin" &&
+      req.user.role !== "SysAdmin" &&
+      req.user.id !== req.params.userId
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const result = await User.findByIdAndDelete(req.params.userId);
     if (!result) return res.status(404).json({ message: 'User not found' });
     res.json({ message: 'User deleted' });
@@ -107,6 +154,13 @@ exports.updateRole = async (req, res) => {
     // Validate role early (keeps DB hit small if invalid)
     if (!["Student", "Tutor", "Admin"].includes(role)) {
       return res.status(400).json({ message: "Role must be 'Student' or 'Tutor'." });
+    }
+
+    if (
+      req.user.role !== "Admin" &&
+      req.user.role !== "SysAdmin"
+    ) {
+      return res.status(403).json({ message: "Access denied" });
     }
 
     const user = await User.findOneAndUpdate(

@@ -8,6 +8,20 @@ exports.createAvailability = async (req, res) => {
     const { weeklySchedule } = req.body;
     const tutorId = req.params.tutorId;
 
+    if (
+      req.user.role !== "Tutor" &&
+      req.user.role !== "SysAdmin"
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (
+      req.user.role !== "SysAdmin" &&
+      req.params.tutorId !== req.user.id
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const existing = await TutorAvailability.findOne({ tutorId });
     if (existing) {
       return res.status(400).json({ message: 'This tutor already has availability. Please delete it first.' });
@@ -31,7 +45,20 @@ exports.createAvailability = async (req, res) => {
 exports.deleteAvailability = async (req, res) => {
     try {
       const tutorId = req.params.tutorId;
-  
+      
+    if (
+      req.user.role !== "Tutor" &&
+      req.user.role !== "SysAdmin"
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (
+      req.user.role !== "SysAdmin" &&
+      req.params.tutorId !== req.user.id
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
       // 1. Delete availability
       const deletedAvailability = await TutorAvailability.findOneAndDelete({ tutorId });
       if (!deletedAvailability) {
@@ -137,6 +164,20 @@ exports.getTutorById = async (req, res) => {
 // PATCH /api/tutors/:tutorId
 exports.updateTutor = async (req, res) => {
   try {
+    if (
+      req.user.role !== "Tutor" &&
+      req.user.role !== "SysAdmin"
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (
+      req.user.role !== "SysAdmin" &&
+      req.params.tutorId !== req.user.id
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const updates = req.body;
     const tutor = await User.findOneAndUpdate(
       { _id: req.params.tutorId, role: 'Tutor' },
@@ -155,6 +196,19 @@ exports.updateTutor = async (req, res) => {
 // DELETE /api/tutors/:tutorId
 exports.deleteTutor = async (req, res) => {
   try {
+    if (
+      req.user.role !== "SysAdmin"
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (
+      req.user.role !== "SysAdmin" &&
+      req.params.tutorId !== req.user.id
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const tutor = await User.findOneAndDelete({ _id: req.params.tutorId, role: 'Tutor' });
     if (!tutor) return res.status(404).json({ message: 'Tutor not found' });
     res.json({ message: 'Tutor deleted successfully' });
