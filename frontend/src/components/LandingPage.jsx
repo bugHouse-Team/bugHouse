@@ -4,6 +4,7 @@ import HeaderBar from "./HeaderBar";
 import "../styles/LandingPage.css";
 import { useNavigate } from "react-router-dom";
 import InfoPanel from "./InfoPanel";
+import { getAuth, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
 
 
 function LandingPage() {
@@ -24,6 +25,34 @@ function LandingPage() {
     const navigate = useNavigate();
     
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
+    useEffect(() => {
+    const auth = getAuth();
+    const storedEmail = window.localStorage.getItem("emailForSignIn");
+
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+        if (!storedEmail) {
+        const promptEmail = window.prompt("Please confirm your email for sign-in:");
+        if (!promptEmail) return;
+        }
+
+        signInWithEmailLink(auth, storedEmail, window.location.href)
+        .then(async (result) => {
+            console.log("✅ Firebase login complete");
+
+            // 🔐 GET JWT from Firebase
+            const idToken = await result.user.getIdToken();
+            console.log("🔥 Firebase JWT:", idToken);
+
+            // OPTIONAL: Store it or send it to backend for verification
+            localStorage.setItem("firebase_token", idToken);
+        })
+        .catch((err) => {
+            console.error("❌ Firebase sign-in failed:", err);
+        });
+    }
+    }, []);
+
 
     useEffect(() => {
         const storedEmail = localStorage.getItem("emailForSignIn") || "";

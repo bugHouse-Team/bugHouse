@@ -10,7 +10,7 @@ function HoursSection() {
   const userEmail = localStorage.getItem("emailForSignIn");
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
+  const token = localStorage.getItem("firebase_token");
   /* -------------------------------------------
      1. fetch users (skip admins) on mount
   ------------------------------------------- */
@@ -28,7 +28,9 @@ function HoursSection() {
           const isAdmin = role === "SysAdmin";
           setSysAdmin(isAdmin);
 
-          const userList = await axios.get(`${API_URL}/api/users`);
+          const userList = await axios.get(`${API_URL}/api/users`, {headers: {
+            Authorization: `Bearer ${token}`,
+          },});
           const data = userList.data;
 
           const filtered = isAdmin ? data : data.filter(u => u.role !== "Admin" && u.role !== "SysAdmin");

@@ -13,7 +13,7 @@ function ProfileSearch() {
 
   // 👇 same base URL you use in <Profile>
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
+  const token = localStorage.getItem("firebase_token");
   // ─────────────────────────── FETCH ALL USERS ────────────────────────────
   useEffect(() => {
     const fetchAllUsers = async () => {
@@ -21,7 +21,10 @@ function ProfileSearch() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`${API_URL}/api/users`);
+        const res = await fetch(`${API_URL}/api/users`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },});
+        
         if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
 
         const data = await res.json();
