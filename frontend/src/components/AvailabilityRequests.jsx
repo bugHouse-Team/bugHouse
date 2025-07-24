@@ -4,11 +4,15 @@ import '../styles/AvailabilityRequests.css';
 import { FaCheck, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from "react-router-dom";
+
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 export default function AvailabilityRequests() {
+  const navigate = useNavigate();
   const [availabilities, setAvailabilities] = useState([]);
+  const token = localStorage.getItem("firebase_token");
 
   useEffect(() => {
     fetchPendingAvailability();
@@ -16,7 +20,17 @@ export default function AvailabilityRequests() {
 
   const fetchPendingAvailability = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/admin/availability/pending`);
+      const res = await axios.get(`${API_URL}/api/admin/availability/pending`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
       setAvailabilities(res.data);
     } catch (err) {
       console.error('Failed to fetch availability:', err);
@@ -26,7 +40,17 @@ export default function AvailabilityRequests() {
 
   const handleApprove = async (id) => {
     try {
-      await axios.post(`${API_URL}/api/admin/availability/${id}/approve`);
+      await axios.post(`${API_URL}/api/admin/availability/${id}/approve`, {}, {headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
       setAvailabilities(prev => prev.filter(a => a._id !== id));
       toast.success('Availability request approved successfully');
     } catch (err) {
@@ -37,7 +61,17 @@ export default function AvailabilityRequests() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API_URL}/api/admin/availability/${id}`);
+      await axios.delete(`${API_URL}/api/admin/availability/${id}`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
       setAvailabilities(prev => prev.filter(a => a._id !== id));
       toast.success('Availability request deleted successfully');
     } catch (err) {

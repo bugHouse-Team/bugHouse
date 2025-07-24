@@ -25,6 +25,7 @@ function LandingPage() {
     const navigate = useNavigate();
     
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+    const token = localStorage.getItem("firebase_token");
 
     useEffect(() => {
     const auth = getAuth();
@@ -66,7 +67,9 @@ function LandingPage() {
             return;
         }
 
-        axios.get(`${API_URL}/api/users/email/${userEmail}`)
+        axios.get(`${API_URL}/api/users/email/${userEmail}`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },})
             .then((response) => {
                 if (response.data) {
                     console.log(response.data);
@@ -79,7 +82,15 @@ function LandingPage() {
                     console.error("❌ User not found in API response.");
                 }
             })
-            .catch((err) => console.error("❌ Error fetching user data:", err))
+            .catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error fetching user data:", err);
+                }
+            })
             .finally(() => {
                 setLoading(false);
             });
@@ -164,7 +175,9 @@ function LandingPage() {
     };
 
     const registerUser = () => {
-        axios.post(`${API_URL}/api/users`, {
+        axios.post(`${API_URL}/api/users`,{},{headers: {
+          Authorization: `Bearer ${token}`,
+        }}, {
             email: regInputEmail,
             name: userName,
             idNumber: regInputID,
@@ -184,7 +197,13 @@ function LandingPage() {
             }
         })
         .catch((err) => {
-            console.error("❌ Error creating user:", err.response?.data?.message || err.message);
+            const status = err.response?.status;
+            if (status === 302) {
+                console.warn("🚫 302 Error - redirecting to login...");
+                navigate("/signin");
+            } else {
+                console.error("❌ Error creating user:", err);
+            }
         })
         .finally(() => {
             setLoading(false);

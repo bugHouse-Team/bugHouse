@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../styles/ProfileSearch.css";
+import { useNavigate } from "react-router-dom";
 
 function ProfileSearch() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -10,6 +11,8 @@ function ProfileSearch() {
 
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  const navigate = useNavigate();
 
   // 👇 same base URL you use in <Profile>
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
@@ -73,7 +76,10 @@ function ProfileSearch() {
     try {
       // same endpoint the <Profile> component calls
       const res = await fetch(
-        `${API_URL}/api/profile/user/${partialUser.email || partialUser.idNumber}`
+        `${API_URL}/api/profile/user/${partialUser.email || partialUser.idNumber}`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}
+        
       );
   
       let user = partialUser; // fallback

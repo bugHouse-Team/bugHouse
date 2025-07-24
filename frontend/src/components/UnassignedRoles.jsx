@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "../styles/AuthRequest.css";
 
 function HoursSection() {
   const [people, setPeople] = useState([]);   // users ≠ admins
   const [roles,  setRoles]  = useState({});   // idNumber → role
   const [isSysAdmin,  setSysAdmin]  = useState(false);
-
+  const navigate = useNavigate();
   const userEmail = localStorage.getItem("emailForSignIn");
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
@@ -20,7 +21,17 @@ function HoursSection() {
         console.log("🔄 Fetching user data for:", userEmail);
 
         try {
-          const res = await axios.get(`${API_URL}/api/users/email/${userEmail}`);
+          const res = await axios.get(`${API_URL}/api/users/email/${userEmail}`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
           const role = res.data?.role;
 
           console.log("✅ Full API Response:", res.data);
@@ -30,7 +41,15 @@ function HoursSection() {
 
           const userList = await axios.get(`${API_URL}/api/users`, {headers: {
             Authorization: `Bearer ${token}`,
-          },});
+          },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
           const data = userList.data;
 
           const filtered = isAdmin ? data : data.filter(u => u.role !== "Admin" && u.role !== "SysAdmin");
@@ -57,9 +76,17 @@ function HoursSection() {
     try {
       await fetch(`http://localhost:5000/api/users/${idNumber}/role`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ role: newRole }),
-      });
+      }).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
     } catch (err) {
       console.error("Failed to update role:", err);
     }

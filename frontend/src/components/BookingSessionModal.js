@@ -14,14 +14,17 @@ const BookingSessionModal = ({ isOpen, onClose }) => {
   const [slots, setSlots] = useState([]);
   const [filteredSlots, setFilteredSlots] = useState(null);
   const [selectedSlotId, setSelectedSlotId] = useState(null);
-
+  const token = localStorage.getItem("firebase_token");
+  
   useEffect(() => {
     fetchSlots();
   }, []);
 
   const fetchSlots = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/slots`);
+      const res = await axios.get(`${API_URL}/api/slots`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },});
       setSlots(res.data);
     } catch (err) {
       console.error("Failed to fetch slots:", err);
@@ -53,7 +56,9 @@ const BookingSessionModal = ({ isOpen, onClose }) => {
       const user = JSON.parse(localStorage.getItem("user"));
       const studentId = user?.id;
       console.log("studentid for student modal was " + studentId);
-      await axios.post(`${API_URL}/api/slots/${selectedSlotId}/book`, { studentId });
+      await axios.post(`${API_URL}/api/slots/${selectedSlotId}/book`, { studentId },{headers: {
+          Authorization: `Bearer ${token}`,
+        },});
 
       setSlots(prev => prev.filter(slot => slot.id !== selectedSlotId));
       setFilteredSlots(prev => prev?.filter(slot => slot.id !== selectedSlotId) || null);

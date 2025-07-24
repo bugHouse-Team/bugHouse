@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import maverick from '../assets/images/maverick.png';
 import '../styles/Profile.css';
+import { useNavigate } from "react-router-dom";
+
 
 const Profile = ({ email }) => {
   const [userData, setUserData] = useState(null);
@@ -9,14 +11,24 @@ const Profile = ({ email }) => {
   const [error, setError] = useState(null);
   const [profileImage, setProfileImage] = useState(maverick);
   const fileInputRef = useRef(null);
-
+  const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
+  const token = localStorage.getItem("firebase_token");
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         // CORRECTED: Changed endpoint to match backend route
-        const response = await axios.get(`${API_URL}/api/profile/user/${email}`);
+        const response = await axios.get(`${API_URL}/api/profile/user/${email}`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
         if (response.data) {
           setUserData({
             name: response.data.name,
@@ -32,11 +44,13 @@ const Profile = ({ email }) => {
           }
         }
       } catch (err) {
-        console.error("Profile fetch error:", {
-          message: err.message,
-          response: err.response?.data,
-          status: err.response?.status
-        });
+        const status = err.response?.status;
+        if (status === 302) {
+            console.warn("🚫 302 Error - redirecting to login...");
+            navigate("/signin");
+        } else {
+            console.error("❌ Error fetching user data:", err);
+        }
         setError(err.response?.data?.message || 'Failed to fetch profile data');
       } finally {
         setLoading(false);
@@ -62,7 +76,8 @@ const Profile = ({ email }) => {
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
           }
         }
       );

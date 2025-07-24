@@ -3,11 +3,14 @@ import axios from "axios";
 import "../styles/TutorCurrentAvailability.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const TutorCurrentAvailability = ({ tutorId, onRequestNew }) => {
+  const navigate = useNavigate();
+  const token = localStorage.getItem("firebase_token");
+
   const [availability, setAvailability] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +20,17 @@ const TutorCurrentAvailability = ({ tutorId, onRequestNew }) => {
 
   const fetchAvailability = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/tutors/${tutorId}/availability`);
+      const res = await axios.get(`${API_URL}/api/tutors/${tutorId}/availability`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
       setAvailability(res.data);
     } catch (err) {
       console.error("No availability found:", err);
@@ -29,7 +42,17 @@ const TutorCurrentAvailability = ({ tutorId, onRequestNew }) => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${API_URL}/api/tutors/${tutorId}/availability`);
+      await axios.delete(`${API_URL}/api/tutors/${tutorId}/availability`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
       setAvailability(null);
       toast.success("Availability deleted successfully!");
     } catch (err) {

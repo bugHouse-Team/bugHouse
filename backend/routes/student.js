@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Attendance = require("../models/Attendance");
+const { verifyAdmin, authenticate } = require("../middleware/auth");
 
 const {
   getAllStudents,
@@ -45,10 +46,10 @@ router.get("/attendance/:email", async (req, res) => {
 });
 
 // ⬇️ Student routes
-router.get('/:studentId/bookings', getStudentBookings);
-router.get('/', getAllStudents);
-router.get('/:studentId', getStudentById);
-router.patch('/:studentId', updateStudent);
-router.delete('/:studentId', deleteStudent);
+router.get('/:studentId/bookings',authenticate, getStudentBookings);
+router.get('/',authenticate, getAllStudents);
+router.get('/:studentId',authenticate, getStudentById);
+router.patch('/:studentId',authenticate, updateStudent);
+router.delete('/:studentId',authenticate, deleteStudent);
 
 module.exports = router;
