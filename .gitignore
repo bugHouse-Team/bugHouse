@@ -13,3 +13,5 @@ logs/
 
 # Ignore uploaded profile images (Profile component addition)
 /uploads/
+
+service-account.json

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { verifyAdmin, authenticate } = require("../middleware/auth");
 const {
   createAvailability,
   getAvailabilityByTutor,
@@ -14,21 +15,21 @@ const {
 const { get } = require('mongoose');
 
 // Tutor Availability
-router.post('/:tutorId/availability', createAvailability);
-router.get('/:tutorId/availability', getAvailabilityByTutor);
-router.delete('/:tutorId/availability', deleteAvailability);
+router.post('/:tutorId/availability',authenticate, createAvailability);
+router.get('/:tutorId/availability',authenticate, getAvailabilityByTutor);
+router.delete('/:tutorId/availability',authenticate, deleteAvailability);
 
 // Tutor Bookings
-router.get('/:tutorId/bookings', getTutorBookings);
+router.get('/:tutorId/bookings',authenticate, getTutorBookings);
 
 // Tutor Reports
-router.get('/:tutorId/report', getTutorReport)
+router.get('/:tutorId/report',authenticate, getTutorReport)
 
 // Tutor Profile Management
-router.get('/', getAllTutors);            // Get all tutors
-router.get('/:tutorId', getTutorById);    // Get tutor by ID
-router.patch('/:tutorId', updateTutor);   // Update tutor info
-router.delete('/:tutorId', deleteTutor);  // Delete tutor 
+router.get('/',authenticate, getAllTutors);            // Get all tutors
+router.get('/:tutorId',authenticate, getTutorById);    // Get tutor by ID
+router.patch('/:tutorId',authenticate, updateTutor);   // Update tutor info
+router.delete('/:tutorId',authenticate, deleteTutor);  // Delete tutor 
 
 
 module.exports = router;

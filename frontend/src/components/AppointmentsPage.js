@@ -4,6 +4,7 @@ import BookingSessionModal from "./BookingSessionModal";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../styles/AppointmentsPage.css";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
@@ -11,6 +12,8 @@ function AppointmentsPage({ user, refreshTrigger }) {
   const [appointments, setAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const token = localStorage.getItem("firebase_token");
+  const navigate = useNavigate();
 
   const studentId = user.id;
   const boxRef = useRef();
@@ -33,7 +36,9 @@ function AppointmentsPage({ user, refreshTrigger }) {
 
   const fetchAppointments = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/students/${studentId}/bookings`);
+      const res = await axios.get(`${API_URL}/api/students/${studentId}/bookings`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },});
       const formatted = res.data.map((booking) => ({
         id: booking.id,
         tutor: booking.tutorId?.name || "Unknown Tutor",
@@ -64,7 +69,9 @@ function AppointmentsPage({ user, refreshTrigger }) {
 
   const handleCancelAppointment = async () => {
     try {
-      await axios.post(`${API_URL}/api/slots/${selectedAppointment.id}/cancel`);
+      await axios.post(`${API_URL}/api/slots/${selectedAppointment.id}/cancel`, {}, {headers: {
+          Authorization: `Bearer ${token}`,
+        },});
       setAppointments((prev) => prev.filter((appt) => appt.id !== selectedAppointment.id));
       toast.success("Appointment Cancelled Successfully");
       setSelectedAppointment(null);

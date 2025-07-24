@@ -5,12 +5,15 @@ import { MdDelete } from "react-icons/md";
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import '../styles/TutorAvailabilityForm.css';
+import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 export default function TutorAvailabilityForm({ tutorId, onClose }) {
+  const navigate = useNavigate();
+  const token = localStorage.getItem("firebase_token");
+
   const [schedule, setSchedule] = useState(
     daysOfWeek.map(day => ({
       day,
@@ -85,7 +88,18 @@ export default function TutorAvailabilityForm({ tutorId, onClose }) {
     };
 
     try {
-      await axios.post(`${API_URL}/api/tutors/${tutorId}/availability`, payload);
+      await axios.post(`${API_URL}/api/tutors/${tutorId}/availability`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
       toast.success("Availability submitted successfully!");
       onClose();
     } catch (err) {

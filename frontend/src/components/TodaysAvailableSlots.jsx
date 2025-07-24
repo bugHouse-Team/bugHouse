@@ -3,14 +3,18 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../styles/TodaysAvailableSlots.css";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 
 function TodaysAvailableSlots({ user, onSessionBooked }) {
   const [slots, setSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const studentId = user.id;
   const boxRef = useRef();
+  const navigate = useNavigate();
+  const token = localStorage.getItem("firebase_token");
 
   useEffect(() => {
     if (studentId) fetchTodaysSlots();
@@ -32,7 +36,17 @@ function TodaysAvailableSlots({ user, onSessionBooked }) {
     try {
       // const today = "2025-04-28"; // For testing purposes, you can set a fixed date
       const today = new Date().toISOString().split("T")[0];
-      const res = await axios.get(`${API_URL}/api/slots`);
+      const res = await axios.get(`${API_URL}/api/slots`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
       const todaysSlots = res.data.filter(
         (slot) =>
           new Date(slot.date).toISOString().split("T")[0] === today && !slot.isBooked
@@ -60,7 +74,9 @@ function TodaysAvailableSlots({ user, onSessionBooked }) {
 
   const handleBook = async () => {
     try {
-      await axios.post(`${API_URL}/api/slots/${selectedSlot.id}/book`, { studentId });
+      await axios.post(`${API_URL}/api/slots/${selectedSlot.id}/book`, { studentId },{headers: {
+          Authorization: `Bearer ${token}`,
+        },});
       toast.success(`Session booked with ${selectedSlot.tutor}`);
       setSlots((prev) => prev.filter((s) => s.id !== selectedSlot.id));
       setSelectedSlot(null);

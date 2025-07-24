@@ -3,15 +3,17 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../styles/TutorAppointments.css";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 function TutorAppointmentsPage({ user, refreshTrigger }) {
   const [appointments, setAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-
+  const navigate = useNavigate();
   const tutorId = user.id;
   const boxRef = useRef();
+  const token = localStorage.getItem("firebase_token");
 
   useEffect(() => {
     if (tutorId) fetchAppointments();
@@ -31,7 +33,17 @@ function TutorAppointmentsPage({ user, refreshTrigger }) {
 
   const fetchAppointments = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/tutors/${tutorId}/bookings`);
+      const res = await axios.get(`${API_URL}/api/tutors/${tutorId}/bookings`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
       const formatted = res.data.map((booking) => ({
         id: booking.id,
         student: booking.studentId?.name || "Unknown Student",
@@ -62,7 +74,17 @@ function TutorAppointmentsPage({ user, refreshTrigger }) {
 
   const handleCancelAppointment = async () => {
     try {
-      await axios.post(`${API_URL}/api/slots/${selectedAppointment.id}/cancel`);
+      await axios.post(`${API_URL}/api/slots/${selectedAppointment.id}/cancel`,{},{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
       setAppointments((prev) => prev.filter((appt) => appt.id !== selectedAppointment.id));
       toast.success("Appointment Cancelled Successfully");
       setSelectedAppointment(null);
