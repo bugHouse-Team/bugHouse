@@ -3,7 +3,7 @@
   right: 2vh;                 /* distance from screen edge          */
   top: 6vh;
   height: calc(100vh - 13vh); /* ≈ 2 vh top  + 11 vh header/footer  */
-  width: 35vh;
+  width: 25vh;
 
   background: #204eb1;
   border: 5px solid #f38223;

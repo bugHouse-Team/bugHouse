@@ -17,60 +17,32 @@ function HoursSection() {
   useEffect(() => {
     (async () => {
       if (userEmail) {
-          console.log("🔄 Fetching user data for:", userEmail);
-          axios.get(`${API_URL}/api/users/email/${userEmail}`)
-              .then((response) => {
-                  console.log("✅ Full API Response:", response.data); // ✅ Debugging
-  
-                  if (response.data && response.data.role) {
-                      if(response.data.role === "SysAdmin")
-                      {
-                        setSysAdmin(true);
-                      }
-                  } else {
-                      console.error("❌ Role not found in API response for", userEmail);
-                  }
+        console.log("🔄 Fetching user data for:", userEmail);
 
+        try {
+          const res = await axios.get(`${API_URL}/api/users/email/${userEmail}`);
+          const role = res.data?.role;
 
-              })
-              .catch((err) => console.error("❌ Error fetching user data:", err))
-              .finally(() => {
-                    axios.get(`${API_URL}/api/users`)
-                    .then((response) => {
-                      
-                      const data = response.data;        // [{ name, idNumber, role }, …]
-                      
-                      console.log(userRole);
-                      if(!isSysAdmin)
-                      {
-                        // 🔑 drop any Admin accounts
-                        const nonAdmins = data.filter(u => u.role !== "Admin" && u.role !== "SysAdmin");
-                        setPeople(nonAdmins);
+          console.log("✅ Full API Response:", res.data);
 
-                        // build lookup for the radios
-                        const initial = {};
-                        nonAdmins.forEach(u => { initial[u.idNumber] = u.role; });
-                        setRoles(initial);
-                      } else
-                      {
-                        // 🔑 drop any Admin accounts
-                        const nonAdmins = data;
-                        setPeople(nonAdmins);
+          const isAdmin = role === "SysAdmin";
+          setSysAdmin(isAdmin);
 
-                        // build lookup for the radios
-                        const initial = {};
-                        nonAdmins.forEach(u => { initial[u.idNumber] = u.role; });
-                        setRoles(initial);
-                      }
-              })
-              .catch((err) => console.error("❌ Error fetching users", err))
-              .finally(() => {
-              
-              });
-                    
-              });
+          const userList = await axios.get(`${API_URL}/api/users`);
+          const data = userList.data;
+
+          const filtered = isAdmin ? data : data.filter(u => u.role !== "Admin" && u.role !== "SysAdmin");
+          setPeople(filtered);
+
+          const initial = {};
+          filtered.forEach(u => {
+            initial[u.idNumber] = u.role;
+          });
+          setRoles(initial);
+        } catch (err) {
+          console.error("❌ Error fetching user data or users:", err);
+        }
       }
-      
     })();
   }, []);
 
@@ -128,7 +100,7 @@ function HoursSection() {
                 type="radio"
                 name={`role-${person.idNumber}`}
                 value="Admin"
-                disabled={isSysAdmin || roles[person.idNumber] === "SysAdmin"}
+                disabled={!isSysAdmin || roles[person.idNumber] === "SysAdmin"}
                 checked={roles[person.idNumber] === "Admin" || roles[person.idNumber] === "SysAdmin"}
                 onChange={() => handleRoleChange(person.idNumber, "Admin")}
               />
@@ -136,10 +108,6 @@ function HoursSection() {
           ))}
         </ul>
       </div>
-
-      <button className="pill" disabled>
-        Assign
-      </button>
     </section>
   );
 }
