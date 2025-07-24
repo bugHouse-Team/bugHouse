@@ -140,3 +140,46 @@
     color: green;
 }
 
+<<<<<<< HEAD
+=======
+
+/* View Dropdown Container */
+.view-dropdown {
+    position: absolute;
+    right: 130px; /* Position left of the sign-out button */
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Label for Dropdown */
+.view-dropdown label {
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Dropdown Select Element */
+.view-dropdown select {
+    background-color: white;
+    color: #0B3555;
+    border: 1px solid #ccc;
+    border-radius: 16.5px;
+    padding: 4px 10px;
+    font-size: 14px;
+    height: 33px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* On Focus or Hover */
+.view-dropdown select:hover,
+.view-dropdown select:focus {
+    border-color: #0063AF;
+    outline: none;
+    box-shadow: 0 0 4px rgba(0, 99, 175, 0.5);
+}
+>>>>>>> enhanced-roles

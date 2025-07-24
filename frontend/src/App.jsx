@@ -54,7 +54,7 @@ function App() {
       <Route
         path="/student-dashboard"
         element={
-          <ProtectedRoute requiredRole="Student">
+          <ProtectedRoute requiredRole="Student|Tutor|SysAdmin">
             <StudentDashboard user={user}/>
            </ProtectedRoute>
         }
@@ -64,7 +64,7 @@ function App() {
       <Route
         path="/tutor-dashboard"
         element={
-          <ProtectedRoute requiredRole="Tutor">
+          <ProtectedRoute requiredRole="Tutor|SysAdmin">
             <TutorDashboard user={user}/>
           </ProtectedRoute>
         }
