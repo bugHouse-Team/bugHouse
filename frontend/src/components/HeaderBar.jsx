@@ -14,8 +14,8 @@ function HeaderBar() {
     const [manualId, setManualId] = useState(""); // Manually entered ID
     const userEmail = localStorage.getItem("emailForSignIn");
     const [loading, setLoading] = useState(true); // ✅ Track loading state
-
-
+    const [selectedView, setSelectedView] = useState(localStorage.getItem("view") || "Student");
+    const [role, setRole] = useState("");
 
     const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
@@ -29,6 +29,7 @@ function HeaderBar() {
                     if (response.data && response.data.idNumber) {
                         setStoredId(response.data.idNumber.trim()); // ✅ Ensure no extra spaces
                         console.log("✅ Stored ID from Database:", response.data.idNumber);
+                        setRole(response.data.role || "Student");
                     } else {
                         console.error("❌ ID not found in API response for", userEmail);
                     }
@@ -40,8 +41,25 @@ function HeaderBar() {
         }
     }, [userEmail, API_URL]);
     
-    
-    
+    const getDashboardPath = (role) => {
+        switch (role) {
+            case "Student":
+                return "/student-dashboard";
+            case "Tutor":
+                return "/tutor-dashboard";
+            case "SysAdmin":
+            case "Admin":
+                return "/admin-dashboard";
+            default:
+                return "/";
+        }
+    };
+
+    useEffect(() => {
+        if (!loading) {
+            navigate(getDashboardPath(selectedView));
+        }
+    }, [selectedView, loading, navigate]);
 
     // ✅ Capture Card Swipe Data (Simulated as Keyboard Input)
     useEffect(() => {
@@ -155,10 +173,28 @@ function HeaderBar() {
         }, 2000);
     };
     
+
     return (
         <div className="header-bar">
             <img src={UTAlogo} alt="UTA Logo" className="header-logo" />
             <h1>STUDENT SUCCESS CENTER</h1>
+            {role !== "Student" && role !== "Admin" && <div className="view-dropdown">
+                    <label htmlFor="view-select">View as: </label>
+                    <select
+                        id="view-select"
+                        value={selectedView}
+                        onChange={(e) => {
+                            const newView = e.target.value;
+                            setSelectedView(newView);
+                            localStorage.setItem("view", newView); // ✅ Persist change
+                        }}
+                    >
+                        {(role == "SysAdmin" || role == "Tutor" || role == "Student") && <option value="Student">Student</option>}
+                        {(role == "SysAdmin" || role == "Tutor") && <option value="Tutor">Tutor</option>}
+                        {(role == "SysAdmin" || role == "Admin") && <option value="Admin">Admin</option>}
+                    </select>
+                </div>
+            }
             <button className="sign-out-btn" onClick={handleSignOutClick}>Sign Out</button>
 
             {/* Sign-Out Modal */}

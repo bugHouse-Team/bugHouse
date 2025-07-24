@@ -1,29 +1,47 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import "../styles/AuthRequest.css";
 
 function HoursSection() {
   const [people, setPeople] = useState([]);   // users ≠ admins
   const [roles,  setRoles]  = useState({});   // idNumber → role
+  const [isSysAdmin,  setSysAdmin]  = useState(false);
+
+  const userEmail = localStorage.getItem("emailForSignIn");
+
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   /* -------------------------------------------
      1. fetch users (skip admins) on mount
   ------------------------------------------- */
   useEffect(() => {
     (async () => {
-      try {
-        const res  = await fetch("http://localhost:5000/api/users");
-        const data = await res.json();        // [{ name, idNumber, role }, …]
+      if (userEmail) {
+        console.log("🔄 Fetching user data for:", userEmail);
 
-        // 🔑 drop any Admin accounts
-        const nonAdmins = data.filter(u => u.role !== "Admin");
-        setPeople(nonAdmins);
+        try {
+          const res = await axios.get(`${API_URL}/api/users/email/${userEmail}`);
+          const role = res.data?.role;
 
-        // build lookup for the radios
-        const initial = {};
-        nonAdmins.forEach(u => { initial[u.idNumber] = u.role; });
-        setRoles(initial);
-      } catch (err) {
-        console.error("Could not fetch users:", err);
+          console.log("✅ Full API Response:", res.data);
+
+          const isAdmin = role === "SysAdmin";
+          setSysAdmin(isAdmin);
+
+          const userList = await axios.get(`${API_URL}/api/users`);
+          const data = userList.data;
+
+          const filtered = isAdmin ? data : data.filter(u => u.role !== "Admin" && u.role !== "SysAdmin");
+          setPeople(filtered);
+
+          const initial = {};
+          filtered.forEach(u => {
+            initial[u.idNumber] = u.role;
+          });
+          setRoles(initial);
+        } catch (err) {
+          console.error("❌ Error fetching user data or users:", err);
+        }
       }
     })();
   }, []);
@@ -51,6 +69,7 @@ function HoursSection() {
         <span className="sectionTitle">Role Selection:</span>
         <span className="studentColumnHeader">Student</span>
         <span className="tutorColumnHeader">Tutor</span>
+        <span className="adminColumnHeader">Admin</span>
       </h2>
 
       <div className="scrollInner">
@@ -66,6 +85,7 @@ function HoursSection() {
                 name={`role-${person.idNumber}`}
                 value="Student"
                 checked={roles[person.idNumber] === "Student"}
+                disabled={roles[person.idNumber] === "SysAdmin"}
                 onChange={() => handleRoleChange(person.idNumber, "Student")}
               />
               <input
@@ -73,16 +93,21 @@ function HoursSection() {
                 name={`role-${person.idNumber}`}
                 value="Tutor"
                 checked={roles[person.idNumber] === "Tutor"}
+                disabled={roles[person.idNumber] === "SysAdmin"}
                 onChange={() => handleRoleChange(person.idNumber, "Tutor")}
+              />
+              <input
+                type="radio"
+                name={`role-${person.idNumber}`}
+                value="Admin"
+                disabled={!isSysAdmin || roles[person.idNumber] === "SysAdmin"}
+                checked={roles[person.idNumber] === "Admin" || roles[person.idNumber] === "SysAdmin"}
+                onChange={() => handleRoleChange(person.idNumber, "Admin")}
               />
             </li>
           ))}
         </ul>
       </div>
-
-      <button className="pill" disabled>
-        Assign
-      </button>
     </section>
   );
 }

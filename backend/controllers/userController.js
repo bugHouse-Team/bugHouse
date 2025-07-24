@@ -101,12 +101,11 @@ exports.verifyIdNumber = async (req, res) => {
 
 exports.updateRole = async (req, res) => {
   try {
-    console.log("CALLED!!!!!!!")
     const { idNumber } = req.params;
     const { role }     = req.body;
 
     // Validate role early (keeps DB hit small if invalid)
-    if (!["Student", "Tutor"].includes(role)) {
+    if (!["Student", "Tutor", "Admin"].includes(role)) {
       return res.status(400).json({ message: "Role must be 'Student' or 'Tutor'." });
     }
 
