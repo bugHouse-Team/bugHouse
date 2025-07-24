@@ -26,18 +26,16 @@ function App() {
    * - If role !== requiredRole, redirect to /signin
    */
   function ProtectedRoute({ children, requiredRole }) {
-    // If no role was found, you might show a loader or simply redirect:
     if (!role) {
-      // No role at all, definitely not authenticated
       return <Navigate to="/signin" replace />;
     }
 
-    // If the current role doesn't match the role needed for this route, redirect
-    if (role !== requiredRole) {
+    const allowedRoles = requiredRole.split("|");
+
+    if (!allowedRoles.includes(role)) {
       return <Navigate to="/signin" replace />;
     }
 
-    // Otherwise render the protected component
     return children;
   }
 
@@ -76,7 +74,7 @@ function App() {
       <Route
         path="/admin-dashboard"
         element={
-          <ProtectedRoute requiredRole="Admin">
+          <ProtectedRoute requiredRole="Admin|SysAdmin">
             <AdminDashboard />
           </ProtectedRoute>
         }

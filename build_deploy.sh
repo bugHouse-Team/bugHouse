@@ -27,11 +27,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 		echo "Starting Docker Desktop (macOS)..."
 		open -a "Docker"
 	fi
-elif grep -qEi "(Microsoft|WSL)" /proc/version 2>/dev/null; then
-	if ! pgrep -f "Docker Desktop.exe" >/dev/null; then
-		echo "Starting Docker Desktop (Windows/WSL)..."
-		powershell.exe start "" '"C:\Program Files\Docker\Docker\Docker Desktop.exe"'
-	fi
+elif [[ "$OSTYPE" == "msys"* ]]; then
+	echo "Starting Docker Desktop (Windows/WSL)..."
+	powershell.exe start "" '"C:\Program Files\Docker\Docker\Docker Desktop.exe"'
 fi
 
 # Ensure Docker daemon is running (Linux users may need to start it manually)

@@ -22,7 +22,7 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['Student', 'Tutor', 'Admin'],
+    enum: ['Student', 'Tutor', 'Admin', 'SysAdmin'],
     required: true
   },
   // PROFILE-SPECIFIC ADDITION
