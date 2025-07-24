@@ -171,6 +171,7 @@ function LandingPage() {
                 return "/student-dashboard";
             case "Tutor":
                 return "/tutor-dashboard";
+            case "SysAdmin":
             case "Admin":
                 return "/admin-dashboard";
             default:
