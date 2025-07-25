@@ -6,11 +6,14 @@ const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    // Redirect if token is missing or badly formatted
     return res.status(401).json({ message: "Unauthorized. Missing header." });
   }
 
   const idToken = authHeader.split("Bearer ")[1];
+
+  if(idToken.length == 0 || idToken === "undefined" || idToken === "null") {
+    return res.status(302).json({ message: "Unauthorized. Invalid token." });
+  }
 
   try {
     const decoded = await admin.auth().verifyIdToken(idToken);
@@ -19,16 +22,19 @@ const authenticate = async (req, res, next) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      // Redirect if user is not found in your database
-      res.status(302).json({ message: "Unauthorized", idToken });
+      return res.status(401).json({ message: "Unauthorized. User not found." });
     }
 
-    req.user = user; // include role, email, idNumber, etc.
+    req.user = user;
     next();
   } catch (err) {
     console.error("Authentication error:", err);
-    // Redirect if token verification fails
-    res.status(302).json({ message: "Unauthorized", idToken });
+
+    if (err.code === "auth/id-token-expired") {
+      return res.status(302).json({ message: "Token expired" });
+    }
+
+    return res.status(401).json({ message: "Unauthorized", error: err.message });
   }
 };
 

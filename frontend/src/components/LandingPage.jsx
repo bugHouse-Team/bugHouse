@@ -45,7 +45,6 @@ function LandingPage() {
             const idToken = await result.user.getIdToken();
             console.log("🔥 Firebase JWT:", idToken);
 
-            // OPTIONAL: Store it or send it to backend for verification
             localStorage.setItem("firebase_token", idToken);
         })
         .catch((err) => {
