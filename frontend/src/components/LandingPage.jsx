@@ -1,361 +1,146 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import HeaderBar from "./HeaderBar";
+import InfoPanel from "./InfoPanel";
 import "../styles/LandingPage.css";
 import { useNavigate } from "react-router-dom";
-import InfoPanel from "./InfoPanel";
-import { getAuth, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
-
+import {
+  getAuth,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
+} from "firebase/auth";
 
 function LandingPage() {
-    const [storedId, setStoredId] = useState(""); // ID from database
-    const [userObject, setUserObject] = useState({}); // User object
-    const [swipeMode, setSwipeMode] = useState(true); // Toggle between swipe/manual
-    const [manualId, setManualId] = useState(""); // Manually entered ID
-    const [userName, setUserName] = useState("");
-    const [userClass, setUserClass] = useState("");
-    const [error, setError] = useState(""); // Error message
-    const [loading, setLoading] = useState(true); // Track loading state
-    const [authenticated, setAuthenticated] = useState(false);
-    const [registerMode, setRegisterMode] = useState(false) // Track if user is verified
-    const [role, setRole] = useState("");
-    const [userEmail, setUserEmail] = useState("");
-    const [regInputEmail, setRegInputEmail] = useState("");
-    const [regInputID, setRegInputID] = useState(""); // Store user role
-    const navigate = useNavigate();
-    
-    const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-    const token = localStorage.getItem("firebase_token");
+  const [storedId, setStoredId] = useState(""); // ID from database
+  const [userObject, setUserObject] = useState({}); // User object
+  const [swipeMode, setSwipeMode] = useState(true); // Toggle between swipe/manual
+  const [manualId, setManualId] = useState(""); // Manually entered ID
+  const [error, setError] = useState(""); // Error message
+  const [loading, setLoading] = useState(true); // Track loading state
+  const [authenticated, setAuthenticated] = useState(false);
+  const [userEmail, setUserEmail] = useState(""); // From Firebase
+  const [role, setRole] = useState("");
 
-    useEffect(() => {
+  const navigate = useNavigate();
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const token = localStorage.getItem("firebase_token");
+
+  // ✅ Step 1: Handle Firebase email link login
+  useEffect(() => {
     const auth = getAuth();
     const storedEmail = window.localStorage.getItem("emailForSignIn");
 
     if (isSignInWithEmailLink(auth, window.location.href)) {
-        if (!storedEmail) {
-        const promptEmail = window.prompt("Please confirm your email for sign-in:");
-        if (!promptEmail) return;
-        }
+      const emailToUse =
+        storedEmail ||
+        window.prompt("Please confirm your email for sign-in:") ||
+        "";
 
-        signInWithEmailLink(auth, storedEmail, window.location.href)
+      if (!emailToUse) return;
+
+      signInWithEmailLink(auth, emailToUse, window.location.href)
         .then(async (result) => {
-            console.log("✅ Firebase login complete");
+          console.log("✅ Firebase login complete");
 
-            // 🔐 GET JWT from Firebase
-            const idToken = await result.user.getIdToken();
-            console.log("🔥 Firebase JWT:", idToken);
+          // Get Firebase JWT
+          const idToken = await result.user.getIdToken();
+          console.log("🔥 Firebase JWT:", idToken);
 
-            localStorage.setItem("firebase_token", idToken);
+          localStorage.setItem("firebase_token", idToken);
+          window.localStorage.setItem("emailForSignIn", emailToUse);
+          setUserEmail(emailToUse);
         })
         .catch((err) => {
-            console.error("❌ Firebase sign-in failed:", err);
+          console.error("❌ Firebase sign-in failed:", err);
         });
     }
-    }, []);
+  }, []);
 
+  // ✅ Step 2: Load stored email (if already logged in)
+  useEffect(() => {
+    const storedEmail = localStorage.getItem("emailForSignIn") || "";
+    if (storedEmail) {
+      setUserEmail(storedEmail);
+    } else {
+      setLoading(false);
+    }
+  }, []);
 
-    useEffect(() => {
-        const storedEmail = localStorage.getItem("emailForSignIn") || "";
-        setUserEmail(storedEmail);
-    }, []);
+  // ✅ Step 3: Fetch user data from backend
+  useEffect(() => {
+    if (!userEmail) {
+      setLoading(false);
+      return;
+    }
 
-    // ✅ Fetch User Data on Page Load
-    useEffect(() => {
-        if (!userEmail) {
-            setLoading(false);
-            return;
+    axios
+      .get(`${API_URL}/api/users/email/${userEmail}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        if (response.data) {
+          console.log("✅ User found:", response.data);
+          setUserObject(response.data);
+          setStoredId(response.data.idNumber.trim());
+          setRole(response.data.role);
+          localStorage.setItem("id", response.data.idNumber);
+          localStorage.setItem("role", response.data.role);
+          localStorage.setItem("user", JSON.stringify(response.data));
+          setLoading(false);
+          setAuthenticated(true);
+          navigate(getDashboardPath(response.data.role));
+        } else {
+          console.error("❌ User not found, redirecting to signup...");
+          navigate("/signup", { state: { email: userEmail } });
         }
-
-        axios.get(`${API_URL}/api/users/email/${userEmail}`,{headers: {
-          Authorization: `Bearer ${token}`,
-        },})
-            .then((response) => {
-                if (response.data) {
-                    console.log(response.data);
-                    setUserObject(response.data);
-                    setStoredId(response.data.idNumber.trim());
-                    setRole(response.data.role);
-                    localStorage.setItem("role", response.data.role)
-                    console.log("✅ Stored ID from Database:", response.data.idNumber);
-                } else {
-                    console.error("❌ User not found in API response.");
-                }
-            })
-            .catch((err) => {
-                const status = err.response?.status;
-                if (status === 302) {
-                    console.warn("🚫 302 Error - redirecting to login...");
-                    navigate("/signin");
-                } else {
-                    console.error("❌ Error fetching user data:", err);
-                }
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, [userEmail, API_URL]);
-
-    // ✅ Capture Swipe Data
-    useEffect(() => {
-        if (!swipeMode) return; // Only listen for swipe input when swipe mode is active
-
-        let buffer = "";
-        let scanning = false;
-
-        const handleKeyDown = (event) => {
-            if (event.key === "Enter") {
-                scanning = false;
-                processSwipedData(buffer);
-                buffer = "";
-            } else {
-                buffer += event.key;
-                scanning = true;
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [swipeMode]);
-
-    // ✅ Process Swiped Data
-    const processSwipedData = (data) => {
-        console.log("Raw Swiped Data:", data);
-
-        if (loading || !storedId) {
-            setError("⚠️ Please wait. Loading user data...");
-            return;
+      })
+      .catch((err) => {
+        const status = err.response?.status;
+        if (status === 404 || status === 401) {
+          console.warn("⚠️ User not found or unauthorized. Redirecting to signup...");
+          // Clear old data to avoid wrong redirects
+          localStorage.removeItem("role");
+          localStorage.removeItem("user");
+          navigate("/signup", { state: { email: userEmail } });
+        } else if (status === 302) {
+          console.warn("🚫 302 Error - redirecting to login...");
+          navigate("/signin");
+        } else {
+          console.error("❌ Error fetching user data:", err);
+          setError("Failed to fetch user data.");
+          setLoading(false);
         }
+      });
+  }, [userEmail, API_URL]);
 
-        const cleanedData = data.replace(/Shift/g, "").trim();
-        const match = cleanedData.match(/\+(\d+)\?/);
-        let extractedId = match ? match[1].trim() : null;
+  // ✅ Dashboard path helper
+  const getDashboardPath = (role) => {
+    switch (role) {
+      case "Student":
+        return "/student-dashboard";
+      case "Tutor":
+        return "/tutor-dashboard";
+      case "SysAdmin":
+      case "Admin":
+        return "/admin-dashboard";
+      default:
+        return "/";
+    }
+  };
 
-        if (!extractedId) {
-            setError("❌ Failed to extract ID. Please swipe again.");
-            return;
-        }
+  if (loading) return <div className="loading">⏳ Loading...</div>;
 
-        extractedId = extractedId.replace(/\s+/g, "").trim();
+  return (
+    <div className="landing-page">
+      <HeaderBar />
 
-        console.log("Extracted ID:", extractedId);
-        verifyId(extractedId);
-    };
+      <div className="content">
+          <p>✅ Authentication Successful! Redirecting...</p>
+      </div>
 
-    // ✅ Verify ID Before Redirecting
-    const verifyId = (inputId) => {
-        console.log("Stored ID:", storedId);
-        console.log("Input ID:", inputId);
-
-        if (inputId !== storedId) {
-            if(storedId === "")
-            {
-                setRegInputEmail(userEmail);
-                setRegInputID(inputId);
-                setStoredId(inputId);
-                setUserClass("Freshman");
-                setRegisterMode(true);
-            }
-            else
-            {
-                console.log("this is inputId ", inputId, " and this is storedId ", storedId);
-                setError(`❌ ID did not match. Expected: ${storedId}, Got: ${inputId}`);
-            }
-            
-        } else
-        {
-            console.log("✅ Authentication Successful!");
-            setAuthenticated(true);
-            localStorage.setItem("user", JSON.stringify(userObject));
-            window.location.href = getDashboardPath(userObject.role);
-        }
-
-        
-
-    };
-
-    const registerUser = () => {
-        axios.post(`${API_URL}/api/users`,{},{headers: {
-          Authorization: `Bearer ${token}`,
-        }}, {
-            email: regInputEmail,
-            name: userName,
-            idNumber: regInputID,
-            gradeLevel: userClass,
-            role: "Student"
-        })
-        .then((response) => {
-            if (response.data) {
-                setAuthenticated(true);
-                console.log("✅ User created:", response.data.user);
-                console.log("✅ Authentication Successful!");
-                localStorage.setItem("role", response.data.user.role)
-                localStorage.setItem("user", JSON.stringify(response.data.user));
-                window.location.href = getDashboardPath(response.data.user.role);
-            } else {
-                console.error("❌ Failed to create user: No data returned");
-            }
-        })
-        .catch((err) => {
-            const status = err.response?.status;
-            if (status === 302) {
-                console.warn("🚫 302 Error - redirecting to login...");
-                navigate("/signin");
-            } else {
-                console.error("❌ Error creating user:", err);
-            }
-        })
-        .finally(() => {
-            setLoading(false);
-        });
-
-
-    };
-
-    // ✅ Get Dashboard Path Based on Role
-    const getDashboardPath = (role) => {
-        switch (role) {
-            case "Student":
-                return "/student-dashboard";
-            case "Tutor":
-                return "/tutor-dashboard";
-            case "SysAdmin":
-            case "Admin":
-                return "/admin-dashboard";
-            default:
-                return "/";
-        }
-    };
-
-    if (loading) return <div>⏳ Loading...</div>;
-
-    return (
-        <div className="landing-page">
-            <HeaderBar />
-            <div className="content">
-                {!registerMode && <>
-                    <h1>Authentication Required</h1>
-                    
-                    {/* Authentication Modal */}
-                    <div className="auth-modal">
-                        <h2>Verify Your Identity</h2>
-                        <p>Select a method to authenticate:</p>
-
-                        {/* Toggle Between Swipe and Manual Entry */}
-                        <div className="auth-options">
-                            <button
-                                className={swipeMode ? "active" : ""}
-                                onClick={() => setSwipeMode(true)}
-                                disabled={loading}
-                            >
-                                Swipe ID
-                            </button>
-                            <button
-                                className={!swipeMode ? "active" : ""}
-                                onClick={() => setSwipeMode(false)}
-                                disabled={loading}
-                            >
-                                Enter ID Manually
-                            </button>
-                        </div>
-
-                        {swipeMode ? (
-                            <p>Swipe your ID card using the scanner.</p>
-                        ) : (
-                            <>
-                                <label htmlFor="manual-id">Enter ID:</label>
-                                <input
-                                    type="text"
-                                    id="manual-id"
-                                    value={manualId}
-                                    onChange={(e) => setManualId(e.target.value)}
-                                    disabled={loading}
-                                />
-                                <button onClick={() => verifyId(manualId)} disabled={loading}>
-                                    Confirm
-                                </button>
-                            </>
-                        )}
-
-                        {error && <p className="error-text">{error}</p>}
-                    </div>
-                    </>
-                }
-                {registerMode && 
-                    <div className="register-modal">
-                        <h1>User Registration</h1>
-                        <table className="register-table">
-                            <tbody>
-                                <tr>
-                                    <td><label htmlFor="user-email">Email:</label></td>
-                                    <td>
-                                        <input
-                                            type="text"
-                                            id="user-email"
-                                            value={regInputEmail}
-                                            onChange={(e) => setRegInputEmail(e.target.value)}
-                                            disabled={userEmail !== null && userEmail !== ""}
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><label htmlFor="user-id">ID:</label></td>
-                                    <td>
-                                        <input
-                                            type="text"
-                                            id="user-id"
-                                            value={regInputID}
-                                            onChange={(e) => setRegInputID(e.target.value)}
-                                            disabled={storedId !== null && storedId !== ""}
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><label htmlFor="user-name">Enter Username:</label></td>
-                                    <td>
-                                        <input
-                                            type="text"
-                                            id="user-name"
-                                            value={userName}
-                                            onChange={(e) => setUserName(e.target.value)}
-                                            disabled={loading}
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><label htmlFor="user-class">Enter Class:</label></td>
-                                    <td>
-                                        <select
-                                            id="user-class"
-                                            onChange={(e) => setUserClass(e.target.value)}
-                                            disabled={loading}
-                                        >
-                                            <option value="Select">Select</option>
-                                            <option value="Freshman">Freshman</option>
-                                            <option value="Sophomore">Sophomore</option>
-                                            <option value="Junior">Junior</option>
-                                            <option value="Senior">Senior</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td>
-                                        <button onClick={() => registerUser()} disabled={loading}>
-                                            Register
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                }
-
-
-                {authenticated && <p>✅ Authentication Successful! Redirecting...</p>}
-            </div>
-            <InfoPanel />
-        </div>
-    );
+      <InfoPanel />
+    </div>
+  );
 }
 
 export default LandingPage;

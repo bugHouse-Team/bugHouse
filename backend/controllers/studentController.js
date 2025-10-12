@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Slot = require('../models/Slot');
+const Attendance = require("../models/Attendance");
 
 // GET /api/students
 exports.getAllStudents = async (req, res) => {
@@ -107,5 +108,38 @@ exports.deleteStudent = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to delete student' });
+  }
+};
+
+exports.logAttendance = async (req, res) => {
+  const { email, type = "Sign In" } = req.body;
+  console.log("📩 POST /attendance/log → email:", email, "| type:", type);
+
+  if (!email) {
+    console.warn("⚠️ Missing email in attendance POST");
+    return res.status(400).json({ message: "Email required" });
+  }
+
+  try {
+    const record = new Attendance({ email, type });
+    await record.save();
+    console.log("✅ Attendance saved for:", email);
+    res.status(201).json({ message: "Attendance logged" });
+  } catch (err) {
+    console.error("❌ Error logging attendance:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getAttendance = async (req, res) => {
+  console.log("📥 GET /attendance → email:", req.params.email);
+
+  try {
+    const records = await Attendance.find({ email: req.params.email }).sort({ timestamp: -1 });
+    console.log(`📊 Found ${records.length} attendance records`);
+    res.status(200).json(records);
+  } catch (err) {
+    console.error("❌ Error fetching attendance:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

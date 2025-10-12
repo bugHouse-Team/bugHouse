@@ -131,3 +131,25 @@
     margin: 0 auto 1rem; /* center + space below */
     display: block;
   }
+
+.roleDropdown {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-left: 8px;
+  font-size: 1rem;
+}
+
+.closeButton {
+  margin-top: 16px;
+  padding: 8px 14px;
+  background-color: #0078d7;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background-color: #005fa3;
+}

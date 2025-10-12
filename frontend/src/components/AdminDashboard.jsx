@@ -1,7 +1,6 @@
 import React from "react";
 import HeaderBar from "./HeaderBar";
-import AuthRequest from "./AuthRequest"
-import UnassignedRoles from "./UnassignedRoles"
+import AuthRequest from "./AuthRequest";
 import ProfileSearch from "./ProfileSearch";
 import AvailabilityRequests from "./AvailabilityRequests";
 import Profile from "./Profile";
@@ -37,7 +36,6 @@ const AdminDashboard = () => {
       </main>
       <main className="rightPanel">
         <AuthRequest />
-        <UnassignedRoles />
       </main>
     </div>
   );

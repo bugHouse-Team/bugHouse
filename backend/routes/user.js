@@ -12,7 +12,7 @@ const {
 } = require('../controllers/userController');
 
 // User Management
-router.post('/',authenticate, createUser);                      // Create new user
+router.post('/', createUser);                      // Create new user
 router.get('/', verifyAdmin, getAllUsers);                      // Get all users or filter by ?email=
 router.get('/email/:email',authenticate, getUserByEmail);       // Get user by email
 router.get('/:userId',authenticate, getUserById);               // Get user by ID

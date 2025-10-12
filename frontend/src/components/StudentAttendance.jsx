@@ -19,12 +19,12 @@ const StudentAttendance = ({ user }) => {
     const logAttendance = async () => {
       try {
         console.log("📤 Sending POST to log attendance...");
-        await axios.post("/api/students/attendance/log",{},{headers: {
-          Authorization: `Bearer ${token}`,
-        }}, {
-          email: user.email,
-          type: "Sign In",
-        }).catch((err) => {
+        await axios.post("/api/students/attendance/log",
+          {email: user.email,
+          type: "Sign In",}
+          ,{headers: {
+            Authorization: `Bearer ${token}`,
+          }},).catch((err) => {
                 const status = err.response?.status;
                 if (status === 302) {
                     console.warn("🚫 302 Error - redirecting to login...");
@@ -41,24 +41,22 @@ const StudentAttendance = ({ user }) => {
     };
 
     const fetchAttendance = async () => {
-      try {
-        console.log("📥 Fetching attendance history...");
-        const res = await axios.get(`/api/students/attendance/${user.email}`,{headers: {
-          Authorization: `Bearer ${token}`,
-        }},).catch((err) => {
-                const status = err.response?.status;
-                if (status === 302) {
-                    console.warn("🚫 302 Error - redirecting to login...");
-                    navigate("/signin");
-                } else {
-                    console.error("❌ Error:", err);
-                }
-            });
+      console.log("📥 Fetching attendance history...");
+      
+      await axios.get(`/api/students/attendance/${user.email}`,{headers: {
+        Authorization: `Bearer ${token}`,
+      }},).then((res) => {
         console.log("📊 Fetched attendance:", res.data);
         setAttendanceLog(res.data);
-      } catch (err) {
-        console.error("❌ Failed to fetch attendance:", err);
-      }
+      }).catch((err) => {
+              const status = err.response?.status;
+              if (status === 302) {
+                  console.warn("🚫 302 Error - redirecting to login...");
+                  navigate("/signin");
+              } else {
+                  console.error("❌ Error:", err);
+              }
+          });
     };
 
     logAttendance();

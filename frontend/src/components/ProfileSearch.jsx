@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/ProfileSearch.css";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function ProfileSearch() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,35 +13,60 @@ function ProfileSearch() {
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
+  const [id, setId] = useState(localStorage.getItem("id") || "");
+  const [role, setRole] = useState(localStorage.getItem("role") || "");
+
+  const userEmail = localStorage.getItem("emailForSignIn");
   const navigate = useNavigate();
 
-  // 👇 same base URL you use in <Profile>
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
   const token = localStorage.getItem("firebase_token");
+
   // ─────────────────────────── FETCH ALL USERS ────────────────────────────
   useEffect(() => {
+    console.log("🔄 Fetching current user info for:", userEmail);
+
+    axios
+      .get(`${API_URL}/api/users/email/${userEmail}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        if (response.data) {
+          console.log("✅ User info fetched:", response.data);
+          setId(response.data.idNumber.trim());
+          setRole(response.data.role);
+        }
+      })
+      .catch((err) => {
+        const status = err.response?.status;
+        if (status === 302) {
+          console.warn("🚫 302 Error - redirecting to login...");
+          navigate("/signin");
+        } else {
+          console.error("❌ Error fetching user data:", err);
+          setError("Failed to fetch user data.");
+          setLoading(false);
+        }
+      });
+
     const fetchAllUsers = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`${API_URL}/api/users`,{headers: {
-          Authorization: `Bearer ${token}`,
-        },});
-        
+        const res = await fetch(`${API_URL}/api/users`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
         if (!res.ok) throw new Error(`Error: ${res.status} ${res.statusText}`);
 
         const data = await res.json();
 
-        // ⬇️ normalize profileImage just like in <Profile>
         const processed = data.map((u) => {
-          if (!u.profileImage) return u; // none set
-
-          const img =
-            u.profileImage.includes("http")
-              ? u.profileImage
-              : `${API_URL}/uploads/${u.profileImage.replace(/\\/g, "/")}`;
-
+          if (!u.profileImage) return u;
+          const img = u.profileImage.includes("http")
+            ? u.profileImage
+            : `${API_URL}/uploads/${u.profileImage.replace(/\\/g, "/")}`;
           return { ...u, profileImage: img };
         });
 
@@ -56,6 +82,42 @@ function ProfileSearch() {
     fetchAllUsers();
   }, [API_URL]);
 
+  // ─────────────────────────── ROLE CHANGE ────────────────────────────
+  const handleRoleChange = async (idNumber, newRole) => {
+    try {
+      // Optimistically update UI
+      setPeople((prev) =>
+        prev.map((p) =>
+          p.idNumber === idNumber ? { ...p, role: newRole } : p
+        )
+      );
+
+      if (selectedUser && selectedUser.idNumber === idNumber) {
+        setSelectedUser((prev) => ({ ...prev, role: newRole }));
+      }
+
+      const res = await fetch(`${API_URL}/api/users/${idNumber}/role`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      if (res.status === 302) {
+        console.warn("🚫 302 Error - redirecting to login...");
+        navigate("/signin");
+        return;
+      }
+
+      if (!res.ok) throw new Error(`Error updating role: ${res.status}`);
+      console.log(`✅ Role updated for ${idNumber} to ${newRole}`);
+    } catch (err) {
+      console.error("Failed to update role:", err);
+    }
+  };
+
   // ─────────────────────────── FILTERING ────────────────────────────
   let filteredPeople = people.filter((p) =>
     p.name?.toLowerCase().startsWith(searchTerm.toLowerCase())
@@ -63,58 +125,57 @@ function ProfileSearch() {
   filteredPeople =
     roleFilter === "all"
       ? filteredPeople
-      : filteredPeople.filter((p) => p.role?.toLowerCase() === roleFilter);
+      : filteredPeople.filter(
+          (p) => p.role?.toLowerCase() === roleFilter.toLowerCase()
+        );
 
   // ─────────────────────────── MODAL HANDLERS ────────────────────────────
   const buildImageUrl = (raw) => {
     if (!raw) return null;
     if (raw.startsWith("http")) return raw;
-    return `${API_URL}/uploads/${raw.replace(/\\/g, "/").replace(/^uploads\/?/, "")}`;
+    return `${API_URL}/uploads/${raw
+      .replace(/\\/g, "/")
+      .replace(/^uploads\/?/, "")}`;
   };
-  
+
   const openUser = async (partialUser) => {
     try {
-      // same endpoint the <Profile> component calls
       const res = await fetch(
-        `${API_URL}/api/profile/user/${partialUser.email || partialUser.idNumber}`,{headers: {
-          Authorization: `Bearer ${token}`,
-        },}
-        
+        `${API_URL}/api/profile/user/${partialUser.email || partialUser.idNumber}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
-  
-      let user = partialUser; // fallback
+
+      let user = partialUser;
       if (res.ok) {
         const full = await res.json();
-        console.log(full.profileImage)
+
         user = {
           ...full,
           profileImage: buildImageUrl(full.profileImage),
+          // Normalize role casing
+          role: full.role
+            ? full.role.charAt(0).toUpperCase() +
+              full.role.slice(1).toLowerCase()
+            : "Student",
         };
       }
-  
+
+      console.log("👤 Opened user:", user);
       setSelectedUser(user);
     } catch (err) {
       console.error("Profile fetch (modal) failed:", err);
-      // still show what we had
       setSelectedUser(partialUser);
     } finally {
       setShowModal(true);
     }
   };
+
   const closeModal = () => {
     setShowModal(false);
     setSelectedUser(null);
   };
-
-  // helper to build a usable URL out of whatever the backend gives us
-  const resolveProfileImage = (raw, API_URL) => {
-    if (!raw) return null;
-    if (raw.startsWith("http")) return raw;
-    // strip a leading "uploads/" if it’s already there so we don’t double it
-    const clean = raw.replace(/\\/g, "/").replace(/^uploads\/?/, "");
-    return `${API_URL}/uploads/${clean}`;
-  };
-
 
   // ─────────────────────────── RENDER ────────────────────────────
   return (
@@ -122,7 +183,7 @@ function ProfileSearch() {
       <main className="innerPanel">
         <h3 className="profileSearchHeader">Profile Search</h3>
 
-        {/* Search + radio buttons */}
+        {/* Search + role filter */}
         <section className="searchBarSection">
           <input
             className="searchInput"
@@ -132,16 +193,16 @@ function ProfileSearch() {
           />
 
           <div className="radioGroup">
-            {["all", "student", "tutor"].map((role) => (
-              <label key={role}>
+            {["all", "student", "tutor"].map((r) => (
+              <label key={r}>
                 <input
                   type="radio"
                   name="role"
-                  value={role}
-                  checked={roleFilter === role}
-                  onChange={() => setRoleFilter(role)}
+                  value={r}
+                  checked={roleFilter === r}
+                  onChange={() => setRoleFilter(r)}
                 />
-                {role[0].toUpperCase() + role.slice(1)}
+                {r[0].toUpperCase() + r.slice(1)}
               </label>
             ))}
           </div>
@@ -150,7 +211,7 @@ function ProfileSearch() {
         {loading && <p>Loading…</p>}
         {error && <p style={{ color: "red" }}>{error}</p>}
 
-        {/* users list */}
+        {/* User list */}
         <section className="profileSearchSubSec">
           <div className="scrollInner">
             <ul className="peopleList">
@@ -173,7 +234,7 @@ function ProfileSearch() {
           </div>
         </section>
 
-        {/* modal */}
+        {/* ──────────────── MODAL ──────────────── */}
         {showModal && selectedUser && (
           <div className="modalBackdrop">
             <div className="modalContent">
@@ -185,7 +246,7 @@ function ProfileSearch() {
                   alt={`${selectedUser.name}'s profile`}
                   className="modalAvatar"
                   onError={(e) => {
-                    e.target.src = '../assets/images/maverick.png'; // ⚠️ no “public/”
+                    e.target.src = "../assets/images/maverick.png";
                   }}
                 />
               )}
@@ -196,11 +257,31 @@ function ProfileSearch() {
               <p>
                 <strong>ID Number:</strong> {selectedUser.idNumber}
               </p>
-              <p>
-                <strong>Role:</strong> {selectedUser.role}
-              </p>
 
-              <button onClick={closeModal}>Close</button>
+              {/* Editable Role Dropdown */}
+              <div style={{ marginTop: "10px" }}>
+                <strong>Role:</strong>{" "}
+                <select
+                  value={selectedUser.role || ""}
+                  onChange={(e) =>
+                    handleRoleChange(selectedUser.idNumber, e.target.value)
+                  }
+                  className="roleDropdown"
+                  disabled={
+                    selectedUser.idNumber === id ||
+                    selectedUser.role === "SysAdmin" ||
+                    (selectedUser.role === "Admin" && role !== "SysAdmin")
+                  }
+                >
+                  <option value="Student">Student</option>
+                  <option value="Tutor">Tutor</option>
+                  <option value="Admin" disabled={role !== "SysAdmin"}>Admin</option>
+                </select>
+              </div>
+
+              <button onClick={closeModal} className="closeButton">
+                Close
+              </button>
             </div>
           </div>
         )}
