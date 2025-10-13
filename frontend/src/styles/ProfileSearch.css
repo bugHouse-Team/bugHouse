@@ -153,3 +153,21 @@
 .closeButton:hover {
   background-color: #005fa3;
 }
+
+.availabilitySection {
+  background: #f9f9f9;
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+.availabilitySection h3 {
+  margin-bottom: 6px;
+  font-size: 1.1rem;
+}
+
+.availabilityItem {
+  margin-bottom: 8px;
+  line-height: 1.4;
+}

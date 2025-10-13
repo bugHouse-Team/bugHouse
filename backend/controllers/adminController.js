@@ -49,6 +49,11 @@ exports.approveAvailability = async (req, res) => {
       return res.status(400).json({ message: 'Availability already approved' });
     }
 
+    const deleted = await TutorAvailability.deleteMany({ tutorId: availability.tutorId, _id: { $ne: availabilityId } });
+    if (deleted) {
+      await Slot.deleteMany({ tutorId: deleted.tutorId, _id: { $ne: availabilityId } });
+    }
+
     availability.isApproved = true;
     await availability.save();
 
