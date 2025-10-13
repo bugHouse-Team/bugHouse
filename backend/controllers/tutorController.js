@@ -23,9 +23,7 @@ exports.createAvailability = async (req, res) => {
     }
 
     const existing = await TutorAvailability.findOne({ tutorId });
-    if (existing) {
-      return res.status(400).json({ message: 'This tutor already has availability. Please delete it first.' });
-    }
+
     if (existing) {
       console.log("Existing availability found:", existing);
     }
@@ -81,10 +79,41 @@ exports.deleteAvailability = async (req, res) => {
 // GET /api/tutors/:tutorId/availability (can be used for filter)
 exports.getAvailabilityByTutor = async (req, res) => {
   try {
-    const availability = await TutorAvailability.findOne({ tutorId: req.params.tutorId });
-    if (!availability) return res.status(404).json({ message: 'Not found.' });
-    res.json(availability);
+    const tutorId = req.params.tutorId;
+    if (!tutorId) {
+      return res.status(400).json({ message: "Missing tutorId parameter." });
+    }
+
+    try
+    {
+      const availability = await TutorAvailability.find({ tutorId: req.params.tutorId });
+
+      if (!availability || availability.length === 0) {
+        return res.status(404).json({ message: "No availability found for this tutor." });
+      }
+
+      res.status(200).json(availability);
+    } catch (err)
+    {
+      const user = await User.findOne({idNumber: tutorId});
+
+      if(user)
+      {
+        const availability = await TutorAvailability.find({ tutorId: user._id });
+
+        if (!availability || availability.length === 0) {
+          return res.status(404).json({ message: "No availability found for this tutor." });
+        }
+
+        res.status(200).json(availability);
+      } else
+      {
+        return res.status(404).json({ message: "User not found." });
+      }
+    }
+
   } catch (err) {
+    console.error("❌ Error fetching availability:", err);
     res.status(500).json({ error: err.message });
   }
 };

@@ -39,24 +39,23 @@ export default function AvailabilityRequests() {
   };
 
   const handleApprove = async (id) => {
-    try {
-      await axios.post(`${API_URL}/api/admin/availability/${id}/approve`, {}, {headers: {
-          Authorization: `Bearer ${token}`,
-        },}).catch((err) => {
-                const status = err.response?.status;
-                if (status === 302) {
-                    console.warn("🚫 302 Error - redirecting to login...");
-                    navigate("/signin");
-                } else {
-                    console.error("❌ Error:", err);
-                }
-            });
-      setAvailabilities(prev => prev.filter(a => a._id !== id));
-      toast.success('Availability request approved successfully');
-    } catch (err) {
-      console.error('Approval failed:', err);
-      toast.error('Failed to approve availability request');
-    }
+    await axios.post(`${API_URL}/api/admin/availability/${id}/approve`, {}, {headers: {
+        Authorization: `Bearer ${token}`,
+      },}).then((res) => {
+        setAvailabilities(prev => prev.filter(a => a._id !== id));
+        toast.success('Availability request approved successfully');
+      }).catch((err) => {
+        const status = err.response?.status;
+        if (status === 302) {
+            console.warn("🚫 302 Error - redirecting to login...");
+            navigate("/signin");
+        } else {
+          console.error("❌ Error:", err);
+
+          console.error('Approval failed:', err);
+          toast.error('Failed to approve availability request');
+        }
+      });
   };
 
   const handleDelete = async (id) => {

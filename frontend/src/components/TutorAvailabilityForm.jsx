@@ -87,25 +87,25 @@ export default function TutorAvailabilityForm({ tutorId, onClose }) {
       weeklySchedule: validateSchedule(schedule)
     };
 
-    try {
-      await axios.post(`${API_URL}/api/tutors/${tutorId}/availability`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      ).catch((err) => {
-                const status = err.response?.status;
-                if (status === 302) {
-                    console.warn("🚫 302 Error - redirecting to login...");
-                    navigate("/signin");
-                } else {
-                    console.error("❌ Error:", err);
-                }
-            });
+    await axios.post(`${API_URL}/api/tutors/${tutorId}/availability`,
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    ).then((res) => {
       toast.success("Availability submitted successfully!");
       onClose();
-    } catch (err) {
-      const msg = err?.response?.data?.message || 'Submission failed.';
-      toast.error(msg);
-    }
+    }).catch((err) => {
+      const status = err.response?.status;
+      
+      if (status === 302) {
+          console.warn("🚫 302 Error - redirecting to login...");
+          navigate("/signin");
+      } else {
+        console.error("❌ Error:", err);
+
+        const msg = err?.response?.data?.message || 'Submission failed.';
+        toast.error(msg);
+      }
+    });
   };
 
   return (

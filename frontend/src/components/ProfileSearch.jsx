@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/ProfileSearch.css";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from 'react-toastify';
 
 function ProfileSearch() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -150,16 +151,42 @@ function ProfileSearch() {
       let user = partialUser;
       if (res.ok) {
         const full = await res.json();
-
         user = {
           ...full,
           profileImage: buildImageUrl(full.profileImage),
-          // Normalize role casing
-          role: full.role
-            ? full.role.charAt(0).toUpperCase() +
-              full.role.slice(1).toLowerCase()
-            : "Student",
+          role: full.role || "Student",
         };
+      }
+
+      // ──────────────── Fetch availability if Tutor or SysAdmin ────────────────
+      if (user.role === "Tutor" || user.role === "SysAdmin") {
+        try {
+          const availRes = await fetch(
+            `${API_URL}/api/tutors/${user._id || user.idNumber}/availability`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (availRes.ok) {
+            const availability = await availRes.json();
+
+            availability.forEach((avail) => {
+              user.availability = avail;
+
+              if (!avail.isApproved) {
+                return;
+              }
+            });
+
+          } else {
+            console.warn("No availability found for user", user.name);
+            user.availability = [];
+          }
+        } catch (e) {
+          console.error("Error fetching availability:", e);
+          user.availability = [];
+        }
       }
 
       console.log("👤 Opened user:", user);
@@ -172,9 +199,49 @@ function ProfileSearch() {
     }
   };
 
+
   const closeModal = () => {
     setShowModal(false);
     setSelectedUser(null);
+  };
+
+  const handleApprove = async (id) => {
+    await axios.post(`${API_URL}/api/admin/availability/${id}/approve`, {}, {headers: {
+        Authorization: `Bearer ${token}`,
+      },}).then((res) => {
+        toast.success('Availability request approved successfully');
+      }).catch((err) => {
+        const status = err.response?.status;
+        if (status === 302) {
+            console.warn("🚫 302 Error - redirecting to login...");
+            navigate("/signin");
+        } else {
+          console.error("❌ Error:", err);
+
+          console.error('Approval failed:', err);
+          toast.error('Failed to approve availability request');
+        }
+      });
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/api/admin/availability/${id}`,{headers: {
+          Authorization: `Bearer ${token}`,
+        },}).catch((err) => {
+                const status = err.response?.status;
+                if (status === 302) {
+                    console.warn("🚫 302 Error - redirecting to login...");
+                    navigate("/signin");
+                } else {
+                    console.error("❌ Error:", err);
+                }
+            });
+      toast.success('Availability request deleted successfully');
+    } catch (err) {
+      console.error('Delete failed:', err.message);
+      toast.error('Failed to delete availability request');
+    }
   };
 
   // ─────────────────────────── RENDER ────────────────────────────
@@ -276,7 +343,58 @@ function ProfileSearch() {
                   <option value="Student">Student</option>
                   <option value="Tutor">Tutor</option>
                   <option value="Admin" disabled={role !== "SysAdmin"}>Admin</option>
+                  <option value="SysAdmin" disabled>SysAdmin</option>
                 </select>
+
+                {/* ──────────────── AVAILABILITY ──────────────── */}
+                {["Tutor", "SysAdmin"].includes(selectedUser.role) && (
+                  <div className="availabilitySection" style={{ marginTop: "15px" }}>
+                    <h3>Weekly Availability</h3>
+                    {selectedUser.availability ? (<div><strong>Status: {selectedUser.availability.isApproved ? "APPROVED" : "PENDING"}</strong><br/><br/></div>) : <></>}
+                    {selectedUser.availability && selectedUser.availability.weeklySchedule.length > 0 ? (
+                        selectedUser.availability.weeklySchedule.map((schedule, i) => (
+                          <div key={i} style={{ marginBottom: "8px" }}>
+                            <strong>{schedule.day}</strong>
+                            <ul style={{ marginTop: "4px", marginLeft: "15px" }}>
+                              {schedule.blocks?.length > 0 ? (
+                                schedule.blocks.map((block, j) => (
+                                  <li key={j}>
+                                    {block.startTime} – {block.endTime}
+                                    {block.subjects?.length > 0 && (
+                                      <span> ({block.subjects.join(", ")})</span>
+                                    )}
+                                  </li>
+                                ))
+                              ) : (
+                                <li>No blocks listed</li>
+                              )}
+                            </ul>
+                          </div>
+                        ))
+                    ) : (
+                      <p>No availability submitted.</p>
+                    )}
+                    {selectedUser.availability && selectedUser.availability.weeklySchedule.length > 0 && !selectedUser.availability.isApproved ? (
+                      <div className="action-buttons">
+                        <button
+                          className="approve"
+                          onClick={() => handleApprove(selectedUser.availability._id)}
+                          title="Approve"
+                        >
+                        </button>
+        
+                        <button
+                          className="deny"
+                          onClick={() => handleDelete(selectedUser.availability._id)}
+                          title="Delete"
+                        >
+                        </button>
+                      </div>) : <></>
+                    }
+                  </div>
+                )}
+
+
               </div>
 
               <button onClick={closeModal} className="closeButton">
