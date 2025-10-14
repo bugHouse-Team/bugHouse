@@ -1,6 +1,7 @@
 const TutorAvailability = require('../models/TutorAvailability');
 const User = require('../models/User');
 const Slot = require('../models/Slot');
+const mongoose = require('mongoose');
 
 // POST /api/tutors/:tutorId/availability
 exports.createAvailability = async (req, res) => {
@@ -125,7 +126,7 @@ exports.getTutorBookings = async (req, res) => {
     const bookings = await Slot.find({
       tutorId: req.params.tutorId,
       isBooked: true
-    }).populate('studentId'); // Optional: populate student details
+    }).populate('studentId');
 
     res.json(bookings);
   } catch (err) {
@@ -170,13 +171,130 @@ exports.getTutorReport = async (req, res) => {
 // GET /api/tutors
 exports.getAllTutors = async (req, res) => {
   try {
-    const tutors = await User.find({ role: 'Tutor' });
+    const tutors = await User.find({ role: { $in: ['Tutor', 'SysAdmin'] } });
     res.json(tutors);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to fetch tutors' });
   }
 };
+
+// GET /api/tutors/subjects
+exports.getSubjects = async (req, res) => {
+  try {
+    const users = await User.find(
+      { role: { $in: ['Tutor', 'SysAdmin'] } },
+      '_id'
+    );
+
+    const tutorIds = users.map(u => u._id);
+
+    const subjects = await TutorAvailability.distinct(
+      'weeklySchedule.blocks.subjects',
+      { tutorId: { $in: tutorIds }, isApproved: true }
+    );
+
+    res.json(subjects.filter(Boolean).sort());
+  } catch (err) {
+    console.error('❌ Error fetching subjects:', err);
+    res.status(500).json({ message: 'Failed to fetch subjects' });
+  }
+};
+
+// GET /api/tutors/slots
+exports.getSlots = async (req, res) => {
+  try {
+    const { date, tutorEmail, subject } = req.query;
+
+    if (!date) return res.status(400).json({ message: "Missing date parameter." });
+
+    const parsedDate = new Date(new Date(date).toLocaleString("en-US", {
+      timeZone: "America/Chicago",
+    }));
+
+    const dayString = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][parsedDate.getDay()];
+
+    let availabilities;
+    if (tutorEmail) {
+      availabilities = await TutorAvailability.aggregate([
+        { $match: { isApproved: true, 'weeklySchedule.day': dayString } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'tutorId',
+            foreignField: '_id',
+            as: 'tutor'
+          }
+        },
+        { $unwind: '$tutor' },
+        { $match: { 'tutor.email': tutorEmail } }
+      ]);
+    } else {
+      availabilities = await TutorAvailability.find({
+        isApproved: true,
+        'weeklySchedule.day': dayString
+      });
+    }
+
+    console.log(req.query);
+
+    console.log(availabilities);
+
+    const slots = [];
+    for (const avail of availabilities) {
+      const schedules = avail.weeklySchedule.filter(b => b.day === dayString);
+      
+      for(const schedule of schedules) {
+        for (const block of schedule.blocks) {
+          if(subject && !block.subjects.includes(subject)) continue;
+          
+          let [hour, minute] = block.startTime.split(":").map(Number);
+
+          const startTime = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), hour, minute);
+
+          [hour, minute] = block.endTime.split(":").map(Number);
+
+          const endTime = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), hour, minute);
+          
+          const slotDuration = 30;
+          
+          while (startTime < endTime) {
+            const slotExists = await Slot.findOne({
+              tutorId: avail.tutorId,
+              date: startTime.toISOString(),
+              startTime: startTime.toISOString().substring(11,16),
+              endTime: new Date(startTime.getTime() + slotDuration*60000).toISOString().substring(11,16)
+            });
+
+            if (!slotExists) {
+              const tutor = await User.findOne({ _id: avail.tutorId });
+
+              slots.push({
+                tutorId: tutor,
+                date: startTime.toISOString(),
+                startTime: startTime.toISOString().substring(11,16),
+                endTime: new Date(startTime.getTime() + slotDuration*60000).toISOString().substring(11,16),
+                subjects: block.subjects,
+                isBooked: false,
+                id: new mongoose.Types.ObjectId()
+              });
+            }
+
+            startTime.setMinutes(startTime.getMinutes() + slotDuration);
+          }
+        }
+      }
+      
+    }
+
+    res.json(slots);
+
+  } catch (err) {
+    console.error('❌ Error fetching slots:', err);
+    res.status(500).json({ message: 'Failed to fetch slots' });
+  }
+};
+
 
 // GET /api/tutors/:tutorId
 exports.getTutorById = async (req, res) => {

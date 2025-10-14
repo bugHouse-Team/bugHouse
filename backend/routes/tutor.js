@@ -10,7 +10,9 @@ const {
   deleteTutor,
   deleteAvailability,
   getTutorBookings,
-  getTutorReport
+  getTutorReport,
+  getSubjects,
+  getSlots
 } = require('../controllers/tutorController');
 const { get } = require('mongoose');
 
@@ -27,6 +29,10 @@ router.get('/:tutorId/report',authenticate, getTutorReport)
 
 // Tutor Profile Management
 router.get('/',authenticate, getAllTutors);            // Get all tutors
+
+router.get('/subjects',authenticate, getSubjects);
+router.get('/slots',authenticate, getSlots);
+
 router.get('/:tutorId',authenticate, getTutorById);    // Get tutor by ID
 router.patch('/:tutorId',authenticate, updateTutor);   // Update tutor info
 router.delete('/:tutorId',authenticate, deleteTutor);  // Delete tutor 

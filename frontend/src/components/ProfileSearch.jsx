@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from 'react-toastify';
 
-function ProfileSearch() {
+function ProfileSearch({onAvailabilityChange}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [people, setPeople] = useState([]);
@@ -206,41 +206,51 @@ function ProfileSearch() {
   };
 
   const handleApprove = async (id) => {
-    await axios.post(`${API_URL}/api/admin/availability/${id}/approve`, {}, {headers: {
-        Authorization: `Bearer ${token}`,
-      },}).then((res) => {
-        toast.success('Availability request approved successfully');
-      }).catch((err) => {
-        const status = err.response?.status;
-        if (status === 302) {
-            console.warn("🚫 302 Error - redirecting to login...");
-            navigate("/signin");
-        } else {
-          console.error("❌ Error:", err);
+    try {
+      await axios.post(
+        `${API_URL}/api/admin/availability/${id}/approve`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-          console.error('Approval failed:', err);
-          toast.error('Failed to approve availability request');
-        }
-      });
+      toast.success("Availability request approved successfully");
+
+      onAvailabilityChange();
+
+      if (selectedUser) await openUser(selectedUser);
+    } catch (err) {
+      const status = err.response?.status;
+      if (status === 302) {
+        console.warn("🚫 302 Error - redirecting to login...");
+        navigate("/signin");
+      } else {
+        console.error("❌ Approval failed:", err);
+        toast.error("Failed to approve availability request");
+      }
+    }
   };
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API_URL}/api/admin/availability/${id}`,{headers: {
-          Authorization: `Bearer ${token}`,
-        },}).catch((err) => {
-                const status = err.response?.status;
-                if (status === 302) {
-                    console.warn("🚫 302 Error - redirecting to login...");
-                    navigate("/signin");
-                } else {
-                    console.error("❌ Error:", err);
-                }
-            });
-      toast.success('Availability request deleted successfully');
+      await axios.delete(`${API_URL}/api/admin/availability/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast.success("Availability request deleted successfully");
+
+      onAvailabilityChange();
+
+      if (selectedUser) await openUser(selectedUser);
+
     } catch (err) {
-      console.error('Delete failed:', err.message);
-      toast.error('Failed to delete availability request');
+      const status = err.response?.status;
+      if (status === 302) {
+        console.warn("🚫 302 Error - redirecting to login...");
+        navigate("/signin");
+      } else {
+        console.error("❌ Delete failed:", err);
+        toast.error("Failed to delete availability request");
+      }
     }
   };
 
@@ -375,19 +385,21 @@ function ProfileSearch() {
                       <p>No availability submitted.</p>
                     )}
                     {selectedUser.availability && selectedUser.availability.weeklySchedule.length > 0 && !selectedUser.availability.isApproved ? (
-                      <div className="action-buttons">
+                      <div className="action-buttons" style={{ display: "block", alignItems: "center", alignContent: "center" }}>
                         <button
                           className="approve"
-                          onClick={() => handleApprove(selectedUser.availability._id)}
+                          onClick={() => handleApprove(selectedUser.availability.id)}
                           title="Approve"
                         >
+                          Approve
                         </button>
         
                         <button
                           className="deny"
-                          onClick={() => handleDelete(selectedUser.availability._id)}
+                          onClick={() => handleDelete(selectedUser.availability.id)}
                           title="Delete"
                         >
+                          Deny
                         </button>
                       </div>) : <></>
                     }

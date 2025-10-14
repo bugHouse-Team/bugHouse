@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import HeaderBar from "./HeaderBar";
 import AuthRequest from "./AuthRequest";
 import ProfileSearch from "./ProfileSearch";
@@ -13,7 +13,14 @@ const ProfileWrapper = ({ children }) => (
 );
 
 const AdminDashboard = () => {
+  const [refreshFlag, setRefreshFlag] = useState(false);
+
   const userEmail = localStorage.getItem("emailForSignIn"); // Get admin's email
+
+  const refreshAvailability = () => {
+    setRefreshFlag((prev) => !prev);
+  };
+
   return (
     <div>
       <HeaderBar />
@@ -21,16 +28,16 @@ const AdminDashboard = () => {
       <main className="leftPanel">
         {/* column 1 – profile then search */}
         <div className="sideColumn">
-          <ProfileWrapper>                          {/* NEW wrapper */}
+          <ProfileWrapper>
             {userEmail && <Profile email={userEmail} />}
           </ProfileWrapper>
 
-          <ProfileSearch />
+          <ProfileSearch onAvailabilityChange={refreshAvailability} />
         </div>
 
         {/* column 2 – requests then calendar */}
         <div className="calendarColumn">
-          <AvailabilityRequests />
+          <AvailabilityRequests refreshFlag={refreshFlag}/>
           <Calendar isAdmin={true} />
           </div>
       </main>

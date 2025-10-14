@@ -69,7 +69,7 @@ function AppointmentsPage({ user, refreshTrigger }) {
 
   const handleCancelAppointment = async () => {
     try {
-      await axios.post(`${API_URL}/api/slots/${selectedAppointment.id}/cancel`, {}, {headers: {
+      await axios.delete(`${API_URL}/api/slots/${selectedAppointment.id}`, {headers: {
           Authorization: `Bearer ${token}`,
         },});
       setAppointments((prev) => prev.filter((appt) => appt.id !== selectedAppointment.id));
