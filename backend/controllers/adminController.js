@@ -1,6 +1,5 @@
 const TutorAvailability = require('../models/TutorAvailability');
 const Slot = require('../models/Slot');
-const generateSlots = require('../services/slotService');
 
 
 // GET /api/admin/availability/pending
@@ -49,11 +48,13 @@ exports.approveAvailability = async (req, res) => {
       return res.status(400).json({ message: 'Availability already approved' });
     }
 
+    const deleted = await TutorAvailability.deleteMany({ tutorId: availability.tutorId, _id: { $ne: availabilityId } });
+    if (deleted) {
+      await Slot.deleteMany({ tutorId: deleted.tutorId, _id: { $ne: availabilityId } });
+    }
+
     availability.isApproved = true;
     await availability.save();
-
-    const slots = generateSlots(availability);
-    await Slot.insertMany(slots);
 
     res.status(200).json({ message: 'Availability approved and slots generated', slotsCount: slots.length });
   } catch (err) {

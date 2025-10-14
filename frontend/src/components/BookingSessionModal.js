@@ -15,33 +15,39 @@ const BookingSessionModal = ({ isOpen, onClose }) => {
   const [filteredSlots, setFilteredSlots] = useState(null);
   const [selectedSlotId, setSelectedSlotId] = useState(null);
   const token = localStorage.getItem("firebase_token");
-  
+
+  const today = new Date();
+
   useEffect(() => {
     fetchSlots();
   }, []);
 
   const fetchSlots = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/slots`,{headers: {
-          Authorization: `Bearer ${token}`,
-        },});
+    await axios.get(`${API_URL}/api/tutors/slots`, {
+      params: { date: today.toISOString() },
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      console.log("Fetched slots:", res.data);
       setSlots(res.data);
-    } catch (err) {
+    }).catch((err) => {
       console.error("Failed to fetch slots:", err);
-    }
+    });
   };
 
-  const handleFilterChange = (filters) => {
-    const filtered = slots.filter((slot) => {
-      const subjectMatch = filters.subject ? slot.subjects.includes(filters.subject) : true;
-      const dateMatch = filters.date
-        ? new Date(slot.date).toISOString().split("T")[0] === filters.date
-        : true;
-      const modeMatch = filters.mode ? (slot.mode || "Online") === filters.mode : true;
-      return subjectMatch && dateMatch && modeMatch;
+  const handleFilterChange = async (filters) => {
+    await axios.get(`${API_URL}/api/tutors/slots`, {
+      params: { date: filters.date ? filters.date : today.toISOString(),
+                subject: filters.subject,
+                tutorEmail: filters.tutorEmail },
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      console.log("Fetched slots:", res.data);
+      setFilteredSlots(res.data);
+      setSelectedSlotId(null);
+    }).catch((err) => {
+      console.error("Failed to fetch slots:", err);
     });
-    setFilteredSlots(filtered);
-    setSelectedSlotId(null);
+    
   };
 
   const handleSlotSelect = (id) => {
@@ -55,8 +61,8 @@ const BookingSessionModal = ({ isOpen, onClose }) => {
 
       const user = JSON.parse(localStorage.getItem("user"));
       const studentId = user?.id;
-      console.log("studentid for student modal was " + studentId);
-      await axios.post(`${API_URL}/api/slots/${selectedSlotId}/book`, { studentId },{headers: {
+
+      await axios.post(`${API_URL}/api/slots/book`, { studentId : studentId, date: selectedSlot.date, startTime: selectedSlot.startTime, endTime : selectedSlot.endTime, tutorId : selectedSlot.tutorId.id, subjects: selectedSlot.subjects, },{headers: {
           Authorization: `Bearer ${token}`,
         },});
 

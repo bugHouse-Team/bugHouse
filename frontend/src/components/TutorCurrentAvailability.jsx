@@ -31,7 +31,14 @@ const TutorCurrentAvailability = ({ tutorId, onRequestNew }) => {
                     console.error("❌ Error:", err);
                 }
             });
-      setAvailability(res.data);
+
+      res.data.forEach((avail) =>
+      {
+        setAvailability(avail);
+        if(!avail.isApproved){
+          return;
+        }
+      });
     } catch (err) {
       console.error("No availability found:", err);
       setAvailability(null);

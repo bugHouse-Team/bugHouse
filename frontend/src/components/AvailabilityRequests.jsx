@@ -9,14 +9,14 @@ import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-export default function AvailabilityRequests() {
+export default function AvailabilityRequests({refreshFlag}) {
   const navigate = useNavigate();
   const [availabilities, setAvailabilities] = useState([]);
   const token = localStorage.getItem("firebase_token");
 
   useEffect(() => {
     fetchPendingAvailability();
-  }, []);
+  }, [refreshFlag]);
 
   const fetchPendingAvailability = async () => {
     try {
@@ -39,24 +39,23 @@ export default function AvailabilityRequests() {
   };
 
   const handleApprove = async (id) => {
-    try {
-      await axios.post(`${API_URL}/api/admin/availability/${id}/approve`, {}, {headers: {
-          Authorization: `Bearer ${token}`,
-        },}).catch((err) => {
-                const status = err.response?.status;
-                if (status === 302) {
-                    console.warn("🚫 302 Error - redirecting to login...");
-                    navigate("/signin");
-                } else {
-                    console.error("❌ Error:", err);
-                }
-            });
-      setAvailabilities(prev => prev.filter(a => a._id !== id));
-      toast.success('Availability request approved successfully');
-    } catch (err) {
-      console.error('Approval failed:', err);
-      toast.error('Failed to approve availability request');
-    }
+    await axios.post(`${API_URL}/api/admin/availability/${id}/approve`, {}, {headers: {
+        Authorization: `Bearer ${token}`,
+      },}).then((res) => {
+        setAvailabilities(prev => prev.filter(a => a._id !== id));
+        toast.success('Availability request approved successfully');
+      }).catch((err) => {
+        const status = err.response?.status;
+        if (status === 302) {
+            console.warn("🚫 302 Error - redirecting to login...");
+            navigate("/signin");
+        } else {
+          console.error("❌ Error:", err);
+
+          console.error('Approval failed:', err);
+          toast.error('Failed to approve availability request');
+        }
+      });
   };
 
   const handleDelete = async (id) => {

@@ -36,48 +36,41 @@ exports.deleteSlot = async (req, res) => {
     if (!result) {
       return res.status(404).json({ message: 'Slot not found' });
     }
-    res.json({ message: 'Slot deleted successfully' });
+    res.json({ message: 'Booking cancelled'});
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error deleting slot' });
   }
 };
 
-// POST /api/slots/:slotId/book
+// POST /api/slots/book
 exports.bookSlot = async (req, res) => {
   try {
-    const { studentId } = req.body;
-    const slot = await Slot.findById(req.params.slotId);
-    if (!slot || slot.isBooked) {
-      return res.status(400).json({ message: 'Slot not available' });
+    const { studentId, tutorId, startTime, endTime, date, subjects } = req.body;
+    
+    const slot = await Slot.findOne({tutorId : tutorId, startTime: startTime, endTime: endTime, date: date, isBooked: true});
+
+    if(!slot)
+    {
+      new Slot({
+        studentId: studentId,
+        tutorId: tutorId,
+        startTime: startTime,
+        endTime: endTime,
+        date: date,
+        subjects: subjects,
+        isBooked: true,
+      }).save();
+
+      res.json({ message: 'Slot booked!', slot });
+    } else
+    {
+      return res.status(400).json({ message: 'Slot already booked' });
     }
 
-    slot.isBooked = true;
-    slot.studentId = studentId;
-    await slot.save();
-
-    res.json({ message: 'Slot booked!', slot });
+    
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error booking slot' });
-  }
-};
-
-// POST /api/slots/:slotId/cancel
-exports.cancelBooking = async (req, res) => {
-  try {
-    const slot = await Slot.findById(req.params.slotId);
-    if (!slot || !slot.isBooked) {
-      return res.status(400).json({ message: 'Slot not booked' });
-    }
-
-    slot.isBooked = false;
-    slot.studentId = null;
-    await slot.save();
-
-    res.json({ message: 'Booking cancelled', slot });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error cancelling booking' });
   }
 };

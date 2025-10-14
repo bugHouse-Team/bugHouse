@@ -8,13 +8,15 @@ const {
   getAllUsers,
   updateUser,
   deleteUser,
-  updateRole
+  updateRole,
+  getAllTutors
 } = require('../controllers/userController');
 
 // User Management
 router.post('/', createUser);                      // Create new user
 router.get('/', verifyAdmin, getAllUsers);                      // Get all users or filter by ?email=
 router.get('/email/:email',authenticate, getUserByEmail);       // Get user by email
+router.get('/tutors',authenticate, getAllTutors);
 router.get('/:userId',authenticate, getUserById);               // Get user by ID
 router.put('/:userId',authenticate, updateUser);                // Update user
 router.delete('/:userId',authenticate, deleteUser);             // Delete user
