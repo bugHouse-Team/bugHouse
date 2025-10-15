@@ -200,7 +200,6 @@ exports.getSubjects = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch subjects' });
   }
 };
-
 // GET /api/tutors/slots
 exports.getSlots = async (req, res) => {
   try {
@@ -212,7 +211,9 @@ exports.getSlots = async (req, res) => {
       timeZone: "America/Chicago",
     }));
 
-    const dayString = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][parsedDate.getDay()];
+    const dayString = [
+      "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+    ][parsedDate.getDay()];
 
     let availabilities;
     if (tutorEmail) {
@@ -233,58 +234,64 @@ exports.getSlots = async (req, res) => {
       availabilities = await TutorAvailability.find({
         isApproved: true,
         'weeklySchedule.day': dayString
-      });
+      }).populate('tutorId');
     }
 
-    console.log(req.query);
+    if (availabilities.length === 0)
+      return res.json([]);
 
-    console.log(availabilities);
+    const tutorIds = availabilities.map(a => a.tutorId._id || a.tutorId);
+    const startOfDay = new Date(parsedDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(parsedDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const slotQuery = {
+      tutorId: { $in: tutorIds },
+      date: { $gte: startOfDay.toISOString(), $lte: endOfDay.toISOString() },
+    };
+    const existingSlots = await Slot.find(slotQuery);
+
+    const existingSet = new Set(
+      existingSlots.map(s => `${s.tutorId}_${s.startTime}_${s.endTime}`)
+    );
 
     const slots = [];
+    const slotDuration = 30;
+
     for (const avail of availabilities) {
+      const tutor = avail.tutor || avail.tutorId;
       const schedules = avail.weeklySchedule.filter(b => b.day === dayString);
-      
-      for(const schedule of schedules) {
+
+      for (const schedule of schedules) {
         for (const block of schedule.blocks) {
-          if(subject && !block.subjects.includes(subject)) continue;
-          
-          let [hour, minute] = block.startTime.split(":").map(Number);
+          if (subject && !block.subjects.includes(subject)) continue;
 
-          const startTime = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), hour, minute);
+          const [startHour, startMinute] = block.startTime.split(":").map(Number);
+          const [endHour, endMinute] = block.endTime.split(":").map(Number);
 
-          [hour, minute] = block.endTime.split(":").map(Number);
+          let slotStart = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), startHour, startMinute);
+          const slotEnd = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), endHour, endMinute);
 
-          const endTime = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), hour, minute);
-          
-          const slotDuration = 30;
-          
-          while (startTime < endTime) {
-            const slotExists = await Slot.findOne({
-              tutorId: avail.tutorId,
-              date: startTime.toISOString(),
-              startTime: startTime.toISOString().substring(11,16),
-              endTime: new Date(startTime.getTime() + slotDuration*60000).toISOString().substring(11,16)
-            });
+          while (slotStart < slotEnd) {
+            const slotKey = `${tutor._id}_${slotStart.toISOString().substring(11, 16)}_${new Date(slotStart.getTime() + slotDuration * 60000).toISOString().substring(11, 16)}`;
 
-            if (!slotExists) {
-              const tutor = await User.findOne({ _id: avail.tutorId });
-
+            if (!existingSet.has(slotKey)) {
               slots.push({
                 tutorId: tutor,
-                date: startTime.toISOString(),
-                startTime: startTime.toISOString().substring(11,16),
-                endTime: new Date(startTime.getTime() + slotDuration*60000).toISOString().substring(11,16),
+                date: parsedDate.toISOString(),
+                startTime: slotStart.toISOString().substring(11, 16),
+                endTime: new Date(slotStart.getTime() + slotDuration * 60000).toISOString().substring(11, 16),
                 subjects: block.subjects,
                 isBooked: false,
-                id: new mongoose.Types.ObjectId()
+                id: new mongoose.Types.ObjectId(),
               });
             }
 
-            startTime.setMinutes(startTime.getMinutes() + slotDuration);
+            slotStart.setMinutes(slotStart.getMinutes() + slotDuration);
           }
         }
       }
-      
     }
 
     res.json(slots);

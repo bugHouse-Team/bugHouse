@@ -3,6 +3,8 @@ import "../styles/ProfileSearch.css";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from 'react-toastify';
+import BookingSessionModal from "./BookingSessionModal";
+import AppointmentsPage from "./AppointmentsPage";
 
 function ProfileSearch({onAvailabilityChange}) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -10,6 +12,8 @@ function ProfileSearch({onAvailabilityChange}) {
   const [people, setPeople] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [showBookings, setShowBookings] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -360,32 +364,48 @@ function ProfileSearch({onAvailabilityChange}) {
                 {["Tutor", "SysAdmin"].includes(selectedUser.role) && (
                   <div className="availabilitySection" style={{ marginTop: "15px" }}>
                     <h3>Weekly Availability</h3>
-                    {selectedUser.availability ? (<div><strong>Status: {selectedUser.availability.isApproved ? "APPROVED" : "PENDING"}</strong><br/><br/></div>) : <></>}
-                    {selectedUser.availability && selectedUser.availability.weeklySchedule.length > 0 ? (
-                        selectedUser.availability.weeklySchedule.map((schedule, i) => (
-                          <div key={i} style={{ marginBottom: "8px" }}>
-                            <strong>{schedule.day}</strong>
-                            <ul style={{ marginTop: "4px", marginLeft: "15px" }}>
-                              {schedule.blocks?.length > 0 ? (
-                                schedule.blocks.map((block, j) => (
-                                  <li key={j}>
-                                    {block.startTime} – {block.endTime}
-                                    {block.subjects?.length > 0 && (
-                                      <span> ({block.subjects.join(", ")})</span>
-                                    )}
-                                  </li>
-                                ))
-                              ) : (
-                                <li>No blocks listed</li>
-                              )}
-                            </ul>
-                          </div>
-                        ))
+                    {selectedUser.availability ? (
+                      <div>
+                        <strong>
+                          Status:{" "}
+                          {selectedUser.availability.isApproved ? "APPROVED" : "PENDING"}
+                        </strong>
+                        <br /><br />
+                      </div>
                     ) : (
                       <p>No availability submitted.</p>
                     )}
-                    {selectedUser.availability && selectedUser.availability.weeklySchedule.length > 0 && !selectedUser.availability.isApproved ? (
-                      <div className="action-buttons" style={{ display: "block", alignItems: "center", alignContent: "center" }}>
+
+                    {selectedUser.availability?.weeklySchedule?.length > 0 ? (
+                      selectedUser.availability.weeklySchedule.map((schedule, i) => (
+                        <div key={i} style={{ marginBottom: "8px" }}>
+                          <strong>{schedule.day}</strong>
+                          <ul style={{ marginTop: "4px", marginLeft: "15px" }}>
+                            {schedule.blocks?.length > 0 ? (
+                              schedule.blocks.map((block, j) => (
+                                <li key={j}>
+                                  {block.startTime} – {block.endTime}
+                                  {block.subjects?.length > 0 && (
+                                    <span> ({block.subjects.join(", ")})</span>
+                                  )}
+                                </li>
+                              ))
+                            ) : (
+                              <li>No blocks listed</li>
+                            )}
+                          </ul>
+                        </div>
+                      ))
+                    ) : (
+                      <p>No availability submitted.</p>
+                    )}
+
+                    {selectedUser.availability?.weeklySchedule?.length > 0 &&
+                    !selectedUser.availability.isApproved ? (
+                      <div
+                        className="action-buttons"
+                        style={{ display: "block", alignItems: "center", alignContent: "center" }}
+                      >
                         <button
                           className="approve"
                           onClick={() => handleApprove(selectedUser.availability.id)}
@@ -393,7 +413,7 @@ function ProfileSearch({onAvailabilityChange}) {
                         >
                           Approve
                         </button>
-        
+
                         <button
                           className="deny"
                           onClick={() => handleDelete(selectedUser.availability.id)}
@@ -401,10 +421,19 @@ function ProfileSearch({onAvailabilityChange}) {
                         >
                           Deny
                         </button>
-                      </div>) : <></>
-                    }
+                      </div>
+                    ) : null}
                   </div>
                 )}
+
+                {["Student", "Tutor", "SysAdmin"].includes(selectedUser.role) && (
+                  <div className="appointmentsSection" style={{ marginTop: "15px" }}>
+                    <AppointmentsPage
+                      user={selectedUser}
+                    />
+                  </div>
+                )}
+
 
 
               </div>

@@ -46,7 +46,7 @@
 }
 
 .calendar-header button:hover {
-  background: #ccc;
+  background: #d46b1d;
 }
 
 .calendar-day-names {
@@ -61,8 +61,6 @@
   font-weight: bold;
   padding: 6px;
   background-color: #f5c8b5;
-
-  /*added to make it stay on top of calendar, could be fixed with spacing changes */
   z-index: 800;
 }
 
@@ -113,122 +111,149 @@
   text-overflow: ellipsis;
 }
 
-/* Events are variable color */
-
 .event:nth-child(odd) {
-  background: #007bff; /* Blue for odd events */
+  background: #007bff;
 }
-
 .event:nth-child(odd):hover {
-  background: #0056b3; 
+  background: #0056b3;
 }
-
 .event:nth-child(even) {
-  background: #f47c2c; /* Orange for even events */
+  background: #f47c2c;
 }
-
 .event:nth-child(even):hover {
-  background: #e76419; /* Slightly darker, warm orange for hover */
+  background: #e76419;
 }
 
 .events-container {
-  flex:1;
-  overflow-y: auto; /* Enables scrolling */
-
-  max-height: 42px; /* Do not increase this or else it causes days with more than 2 events to increase the entire size of the calendar past the leftpanel container */
-  /* Should probably be dynamically calculated in the future but I can't figure out how */
-
+  flex: 1;
+  overflow-y: auto;
+  max-height: 42px;
   min-height: 0;
   scrollbar-width: none;
 }
 
-/* Style your scrollbar inside .events-container */
 .events-container::-webkit-scrollbar {
   width: 2px;
 }
-
 .events-container::-webkit-scrollbar-thumb {
   background-color: #f38223;
   border-radius: 10px;
 }
 
- 
-
 .calendar-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1001;
-}
-
-  */
-.calendar-modal h3 {
-  margin-top: 0;
-  font-size: 1.2rem;
-  text-align: center;
-}
- 
-.calendar-modal ul {
-  padding-left: 1rem;
-}
-
-.calendar-modal button {
-  margin-top: 1rem;
-  width: 100%;
-  padding: 8px;
-  border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.calendar-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
+  animation: fadeIn 0.25s ease-in-out;
+  z-index: 1002;
 }
 
 .calendar-modal {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  width: 300px;
-  max-height: 400px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  width: 360px;
+  max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
 .calendar-modal h3 {
-  margin-top: 0;
-  font-size: 1.2rem;
   text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1.4rem;
+  color: #333;
+  border-bottom: 2px solid #f38223;
+  padding-bottom: 0.4rem;
 }
 
 .calendar-modal ul {
-  padding-left: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.calendar-modal button {
-  margin-top: 1rem;
-  width: 100%;
-  padding: 8px;
+.calendar-modal li {
+  background: #f9fafc;
+  border: 1px solid #e4e6eb;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.calendar-modal li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.calendar-modal strong {
+  color: #222;
+  font-weight: 600;
+}
+
+/* Cancel Button */
+.cancel-btn {
+  margin-top: 8px;
+  background-color: #ff4d4d;
   border: none;
-  background-color: #007bff;
   color: white;
+  padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+.cancel-btn:hover {
+  background-color: #d63d3d;
+}
+
+/* Close Button */
+.calendar-modal button:last-of-type {
+  margin-top: 0.8rem;
+  background-color: #f38223;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.calendar-modal button:last-of-type:hover {
+  background-color: #d46b1d;
+}
+
+.calendar-modal::-webkit-scrollbar {
+  width: 6px;
+}
+.calendar-modal::-webkit-scrollbar-thumb {
+  background-color: #f38223;
+  border-radius: 4px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .calendar-modal {
+    width: 90%;
+    padding: 1rem;
+  }
 }
