@@ -18,6 +18,9 @@ const BookingSessionModal = ({ isOpen, onClose, user }) => {
 
   const today = new Date();
 
+
+  const today = new Date();
+
   useEffect(() => {
     fetchSlots();
   }, []);
@@ -28,12 +31,33 @@ const BookingSessionModal = ({ isOpen, onClose, user }) => {
       headers: { Authorization: `Bearer ${token}` },
     }).then((res) => {
       console.log("Fetched slots:", res.data);
+    await axios.get(`${API_URL}/api/tutors/slots`, {
+      params: { date: today.toISOString() },
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      console.log("Fetched slots:", res.data);
       setSlots(res.data);
+    }).catch((err) => {
     }).catch((err) => {
       console.error("Failed to fetch slots:", err);
     });
+    });
   };
 
+  const handleFilterChange = async (filters) => {
+    await axios.get(`${API_URL}/api/tutors/slots`, {
+      params: { date: filters.date ? filters.date : today.toISOString(),
+                subject: filters.subject,
+                tutorEmail: filters.tutorEmail },
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      console.log("Fetched slots:", res.data);
+      setFilteredSlots(res.data);
+      setSelectedSlotId(null);
+    }).catch((err) => {
+      console.error("Failed to fetch slots:", err);
+    });
+    
   const handleFilterChange = async (filters) => {
     await axios.get(`${API_URL}/api/tutors/slots`, {
       params: { date: filters.date ? filters.date : today.toISOString(),
@@ -59,17 +83,8 @@ const BookingSessionModal = ({ isOpen, onClose, user }) => {
       const selectedSlot = slots.find((slot) => slot.id === selectedSlotId);
       if (!selectedSlot) return;
 
-      let studentId;
-      if(!user)
-      {
-        studentId = JSON.parse(localStorage.getItem("user")).id;
-      } else
-      {
-        studentId = user?._id;
-      }
-
-      console.log(studentId);
-      console.log(user);
+      const user = JSON.parse(localStorage.getItem("user"));
+      const studentId = user?.id;
 
       await axios.post(`${API_URL}/api/slots/book`, { studentId : studentId, date: selectedSlot.date, startTime: selectedSlot.startTime, endTime : selectedSlot.endTime, tutorId : selectedSlot.tutorId.id, subjects: selectedSlot.subjects, },{headers: {
           Authorization: `Bearer ${token}`,

@@ -3,9 +3,8 @@ import "../styles/ProfileSearch.css";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from 'react-toastify';
-import BookingSessionModal from "./BookingSessionModal";
-import AppointmentsPage from "./AppointmentsPage";
 
+function ProfileSearch({onAvailabilityChange}) {
 function ProfileSearch({onAvailabilityChange}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -191,6 +190,39 @@ function ProfileSearch({onAvailabilityChange}) {
           console.error("Error fetching availability:", e);
           user.availability = [];
         }
+          role: full.role || "Student",
+        };
+      }
+
+      // ──────────────── Fetch availability if Tutor or SysAdmin ────────────────
+      if (user.role === "Tutor" || user.role === "SysAdmin") {
+        try {
+          const availRes = await fetch(
+            `${API_URL}/api/tutors/${user._id || user.idNumber}/availability`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (availRes.ok) {
+            const availability = await availRes.json();
+
+            availability.forEach((avail) => {
+              user.availability = avail;
+
+              if (!avail.isApproved) {
+                return;
+              }
+            });
+
+          } else {
+            console.warn("No availability found for user", user.name);
+            user.availability = [];
+          }
+        } catch (e) {
+          console.error("Error fetching availability:", e);
+          user.availability = [];
+        }
       }
 
       console.log("👤 Opened user:", user);
@@ -204,9 +236,59 @@ function ProfileSearch({onAvailabilityChange}) {
   };
 
 
+
   const closeModal = () => {
     setShowModal(false);
     setSelectedUser(null);
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await axios.post(
+        `${API_URL}/api/admin/availability/${id}/approve`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("Availability request approved successfully");
+
+      onAvailabilityChange();
+
+      if (selectedUser) await openUser(selectedUser);
+    } catch (err) {
+      const status = err.response?.status;
+      if (status === 302) {
+        console.warn("🚫 302 Error - redirecting to login...");
+        navigate("/signin");
+      } else {
+        console.error("❌ Approval failed:", err);
+        toast.error("Failed to approve availability request");
+      }
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/api/admin/availability/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast.success("Availability request deleted successfully");
+
+      onAvailabilityChange();
+
+      if (selectedUser) await openUser(selectedUser);
+
+    } catch (err) {
+      const status = err.response?.status;
+      if (status === 302) {
+        console.warn("🚫 302 Error - redirecting to login...");
+        navigate("/signin");
+      } else {
+        console.error("❌ Delete failed:", err);
+        toast.error("Failed to delete availability request");
+      }
+    }
   };
 
   const handleApprove = async (id) => {
@@ -358,54 +440,39 @@ function ProfileSearch({onAvailabilityChange}) {
                   <option value="Tutor">Tutor</option>
                   <option value="Admin" disabled={role !== "SysAdmin"}>Admin</option>
                   <option value="SysAdmin" disabled>SysAdmin</option>
+                  <option value="SysAdmin" disabled>SysAdmin</option>
                 </select>
 
                 {/* ──────────────── AVAILABILITY ──────────────── */}
                 {["Tutor", "SysAdmin"].includes(selectedUser.role) && (
                   <div className="availabilitySection" style={{ marginTop: "15px" }}>
                     <h3>Weekly Availability</h3>
-                    {selectedUser.availability ? (
-                      <div>
-                        <strong>
-                          Status:{" "}
-                          {selectedUser.availability.isApproved ? "APPROVED" : "PENDING"}
-                        </strong>
-                        <br /><br />
-                      </div>
+                    {selectedUser.availability ? (<div><strong>Status: {selectedUser.availability.isApproved ? "APPROVED" : "PENDING"}</strong><br/><br/></div>) : <></>}
+                    {selectedUser.availability && selectedUser.availability.weeklySchedule.length > 0 ? (
+                        selectedUser.availability.weeklySchedule.map((schedule, i) => (
+                          <div key={i} style={{ marginBottom: "8px" }}>
+                            <strong>{schedule.day}</strong>
+                            <ul style={{ marginTop: "4px", marginLeft: "15px" }}>
+                              {schedule.blocks?.length > 0 ? (
+                                schedule.blocks.map((block, j) => (
+                                  <li key={j}>
+                                    {block.startTime} – {block.endTime}
+                                    {block.subjects?.length > 0 && (
+                                      <span> ({block.subjects.join(", ")})</span>
+                                    )}
+                                  </li>
+                                ))
+                              ) : (
+                                <li>No blocks listed</li>
+                              )}
+                            </ul>
+                          </div>
+                        ))
                     ) : (
                       <p>No availability submitted.</p>
                     )}
-
-                    {selectedUser.availability?.weeklySchedule?.length > 0 ? (
-                      selectedUser.availability.weeklySchedule.map((schedule, i) => (
-                        <div key={i} style={{ marginBottom: "8px" }}>
-                          <strong>{schedule.day}</strong>
-                          <ul style={{ marginTop: "4px", marginLeft: "15px" }}>
-                            {schedule.blocks?.length > 0 ? (
-                              schedule.blocks.map((block, j) => (
-                                <li key={j}>
-                                  {block.startTime} – {block.endTime}
-                                  {block.subjects?.length > 0 && (
-                                    <span> ({block.subjects.join(", ")})</span>
-                                  )}
-                                </li>
-                              ))
-                            ) : (
-                              <li>No blocks listed</li>
-                            )}
-                          </ul>
-                        </div>
-                      ))
-                    ) : (
-                      <p>No availability submitted.</p>
-                    )}
-
-                    {selectedUser.availability?.weeklySchedule?.length > 0 &&
-                    !selectedUser.availability.isApproved ? (
-                      <div
-                        className="action-buttons"
-                        style={{ display: "block", alignItems: "center", alignContent: "center" }}
-                      >
+                    {selectedUser.availability && selectedUser.availability.weeklySchedule.length > 0 && !selectedUser.availability.isApproved ? (
+                      <div className="action-buttons" style={{ display: "block", alignItems: "center", alignContent: "center" }}>
                         <button
                           className="approve"
                           onClick={() => handleApprove(selectedUser.availability.id)}
@@ -413,7 +480,7 @@ function ProfileSearch({onAvailabilityChange}) {
                         >
                           Approve
                         </button>
-
+        
                         <button
                           className="deny"
                           onClick={() => handleDelete(selectedUser.availability.id)}
@@ -421,18 +488,12 @@ function ProfileSearch({onAvailabilityChange}) {
                         >
                           Deny
                         </button>
-                      </div>
-                    ) : null}
+                      </div>) : <></>
+                    }
                   </div>
                 )}
 
-                {["Student", "Tutor", "SysAdmin"].includes(selectedUser.role) && (
-                  <div className="appointmentsSection" style={{ marginTop: "15px" }}>
-                    <AppointmentsPage
-                      user={selectedUser}
-                    />
-                  </div>
-                )}
+
               </div>
 
               <button onClick={closeModal} className="closeButton">
