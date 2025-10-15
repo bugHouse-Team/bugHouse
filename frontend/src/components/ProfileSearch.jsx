@@ -433,9 +433,6 @@ function ProfileSearch({onAvailabilityChange}) {
                     />
                   </div>
                 )}
-
-
-
               </div>
 
               <button onClick={closeModal} className="closeButton">
