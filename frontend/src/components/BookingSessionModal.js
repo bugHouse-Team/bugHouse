@@ -10,7 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-const BookingSessionModal = ({ isOpen, onClose }) => {
+const BookingSessionModal = ({ isOpen, onClose, user }) => {
   const [slots, setSlots] = useState([]);
   const [filteredSlots, setFilteredSlots] = useState(null);
   const [selectedSlotId, setSelectedSlotId] = useState(null);
@@ -59,8 +59,17 @@ const BookingSessionModal = ({ isOpen, onClose }) => {
       const selectedSlot = slots.find((slot) => slot.id === selectedSlotId);
       if (!selectedSlot) return;
 
-      const user = JSON.parse(localStorage.getItem("user"));
-      const studentId = user?.id;
+      let studentId;
+      if(!user)
+      {
+        studentId = JSON.parse(localStorage.getItem("user")).id;
+      } else
+      {
+        studentId = user?._id;
+      }
+
+      console.log(studentId);
+      console.log(user);
 
       await axios.post(`${API_URL}/api/slots/book`, { studentId : studentId, date: selectedSlot.date, startTime: selectedSlot.startTime, endTime : selectedSlot.endTime, tutorId : selectedSlot.tutorId.id, subjects: selectedSlot.subjects, },{headers: {
           Authorization: `Bearer ${token}`,
