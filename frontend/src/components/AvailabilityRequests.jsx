@@ -9,14 +9,14 @@ import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-export default function AvailabilityRequests() {
+export default function AvailabilityRequests({refreshFlag}) {
   const navigate = useNavigate();
   const [availabilities, setAvailabilities] = useState([]);
   const token = localStorage.getItem("firebase_token");
 
   useEffect(() => {
     fetchPendingAvailability();
-  }, []);
+  }, [refreshFlag]);
 
   const fetchPendingAvailability = async () => {
     try {
