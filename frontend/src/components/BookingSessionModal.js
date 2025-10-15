@@ -10,11 +10,14 @@ import "react-toastify/dist/ReactToastify.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-const BookingSessionModal = ({ isOpen, onClose }) => {
+const BookingSessionModal = ({ isOpen, onClose, user }) => {
   const [slots, setSlots] = useState([]);
   const [filteredSlots, setFilteredSlots] = useState(null);
   const [selectedSlotId, setSelectedSlotId] = useState(null);
   const token = localStorage.getItem("firebase_token");
+
+  const today = new Date();
+
 
   const today = new Date();
 
@@ -28,12 +31,33 @@ const BookingSessionModal = ({ isOpen, onClose }) => {
       headers: { Authorization: `Bearer ${token}` },
     }).then((res) => {
       console.log("Fetched slots:", res.data);
+    await axios.get(`${API_URL}/api/tutors/slots`, {
+      params: { date: today.toISOString() },
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      console.log("Fetched slots:", res.data);
       setSlots(res.data);
+    }).catch((err) => {
     }).catch((err) => {
       console.error("Failed to fetch slots:", err);
     });
+    });
   };
 
+  const handleFilterChange = async (filters) => {
+    await axios.get(`${API_URL}/api/tutors/slots`, {
+      params: { date: filters.date ? filters.date : today.toISOString(),
+                subject: filters.subject,
+                tutorEmail: filters.tutorEmail },
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      console.log("Fetched slots:", res.data);
+      setFilteredSlots(res.data);
+      setSelectedSlotId(null);
+    }).catch((err) => {
+      console.error("Failed to fetch slots:", err);
+    });
+    
   const handleFilterChange = async (filters) => {
     await axios.get(`${API_URL}/api/tutors/slots`, {
       params: { date: filters.date ? filters.date : today.toISOString(),

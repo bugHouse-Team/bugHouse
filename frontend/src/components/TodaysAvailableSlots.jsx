@@ -33,35 +33,30 @@ function TodaysAvailableSlots({ user, onSessionBooked }) {
   }, []);
 
   const fetchTodaysSlots = async () => {
-    try {
-      // const today = "2025-04-28"; // For testing purposes, you can set a fixed date
-      const today = new Date().toISOString().split("T")[0];
-      const res = await axios.get(`${API_URL}/api/slots`,{headers: {
-          Authorization: `Bearer ${token}`,
-        },}).catch((err) => {
-                const status = err.response?.status;
-                if (status === 302) {
-                    console.warn("🚫 302 Error - redirecting to login...");
-                    navigate("/signin");
-                } else {
-                    console.error("❌ Error:", err);
-                }
-            });
-      const todaysSlots = res.data.filter(
-        (slot) =>
-          new Date(slot.date).toISOString().split("T")[0] === today && !slot.isBooked
-      );
+    const today = new Date().toISOString().split("T")[0];
+    await axios.get(`${API_URL}/api/tutors/slots`, {
+      params: { date: new Date().toISOString() },
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      const todaysSlots = res.data;
+
       const formatted = todaysSlots.map((slot) => ({
         id: slot.id,
         tutor: slot.tutorId?.name || "Unknown Tutor",
         time: `${slot.startTime} - ${slot.endTime}`,
         subjects: slot.subjects.join(", ") || "No subjects listed",
+        date: slot.date,
+        tutorId: slot.tutorId,
+        mode: slot.mode || "Online",
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        subjectsArray: slot.subjects || [],
       }));
       setSlots(formatted);
-    } catch (err) {
+    }).catch((err) => {
       console.error("Failed to fetch today's slots:", err);
       toast.error("Error fetching today's sessions");
-    }
+    });
   };
 
   const handleSlotClick = (slot) => {
@@ -74,7 +69,7 @@ function TodaysAvailableSlots({ user, onSessionBooked }) {
 
   const handleBook = async () => {
     try {
-      await axios.post(`${API_URL}/api/slots/${selectedSlot.id}/book`, { studentId },{headers: {
+      await axios.post(`${API_URL}/api/slots/book`, { studentId : studentId, date: selectedSlot.date, startTime: selectedSlot.startTime, endTime : selectedSlot.endTime, tutorId : selectedSlot.tutorId.id, subjects: selectedSlot.subjectsArray},{headers: {
           Authorization: `Bearer ${token}`,
         },});
       toast.success(`Session booked with ${selectedSlot.tutor}`);

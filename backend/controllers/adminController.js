@@ -93,18 +93,27 @@ exports.deleteAvailability = async (req, res) => {
 
 // GET /api/admin/appointments
 exports.getAllAppointments = async (req, res) => {
-  if (
-      req.user.role !== "Admin" &&
-      req.user.role !== "SysAdmin"
-    ) {
-      return res.status(403).json({ message: "Access denied" });
-    }
+  if (req.user.role !== "Admin" && req.user.role !== "SysAdmin") {
+    return res.status(403).json({ message: "Access denied" });
+  }
+
   try {
     const bookings = await Slot.find({ isBooked: true })
+      .select("_id date startTime subjects studentId tutorId")
       .populate("studentId", "name email")
-      .populate("tutorId", "name email");
+      .populate("tutorId", "name email")
+      .lean();
 
-    res.status(200).json(bookings);
+    const formatted = bookings.map(b => ({
+      _id: b._id,
+      date: b.date,
+      startTime: b.startTime,
+      subjects: b.subjects,
+      studentId: b.studentId,
+      tutorId: b.tutorId,
+    }));
+
+    res.status(200).json(formatted);
   } catch (err) {
     console.error("Error fetching all appointments:", err);
     res.status(500).json({ message: "Failed to fetch appointments" });

@@ -5,11 +5,14 @@ import axios from "axios";
 import { toast } from 'react-toastify';
 
 function ProfileSearch({onAvailabilityChange}) {
+function ProfileSearch({onAvailabilityChange}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [people, setPeople] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [showBookings, setShowBookings] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -187,6 +190,39 @@ function ProfileSearch({onAvailabilityChange}) {
           console.error("Error fetching availability:", e);
           user.availability = [];
         }
+          role: full.role || "Student",
+        };
+      }
+
+      // ──────────────── Fetch availability if Tutor or SysAdmin ────────────────
+      if (user.role === "Tutor" || user.role === "SysAdmin") {
+        try {
+          const availRes = await fetch(
+            `${API_URL}/api/tutors/${user._id || user.idNumber}/availability`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (availRes.ok) {
+            const availability = await availRes.json();
+
+            availability.forEach((avail) => {
+              user.availability = avail;
+
+              if (!avail.isApproved) {
+                return;
+              }
+            });
+
+          } else {
+            console.warn("No availability found for user", user.name);
+            user.availability = [];
+          }
+        } catch (e) {
+          console.error("Error fetching availability:", e);
+          user.availability = [];
+        }
       }
 
       console.log("👤 Opened user:", user);
@@ -200,9 +236,59 @@ function ProfileSearch({onAvailabilityChange}) {
   };
 
 
+
   const closeModal = () => {
     setShowModal(false);
     setSelectedUser(null);
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await axios.post(
+        `${API_URL}/api/admin/availability/${id}/approve`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("Availability request approved successfully");
+
+      onAvailabilityChange();
+
+      if (selectedUser) await openUser(selectedUser);
+    } catch (err) {
+      const status = err.response?.status;
+      if (status === 302) {
+        console.warn("🚫 302 Error - redirecting to login...");
+        navigate("/signin");
+      } else {
+        console.error("❌ Approval failed:", err);
+        toast.error("Failed to approve availability request");
+      }
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/api/admin/availability/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast.success("Availability request deleted successfully");
+
+      onAvailabilityChange();
+
+      if (selectedUser) await openUser(selectedUser);
+
+    } catch (err) {
+      const status = err.response?.status;
+      if (status === 302) {
+        console.warn("🚫 302 Error - redirecting to login...");
+        navigate("/signin");
+      } else {
+        console.error("❌ Delete failed:", err);
+        toast.error("Failed to delete availability request");
+      }
+    }
   };
 
   const handleApprove = async (id) => {
@@ -353,6 +439,7 @@ function ProfileSearch({onAvailabilityChange}) {
                   <option value="Student">Student</option>
                   <option value="Tutor">Tutor</option>
                   <option value="Admin" disabled={role !== "SysAdmin"}>Admin</option>
+                  <option value="SysAdmin" disabled>SysAdmin</option>
                   <option value="SysAdmin" disabled>SysAdmin</option>
                 </select>
 

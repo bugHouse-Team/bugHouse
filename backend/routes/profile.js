@@ -84,7 +84,8 @@ router.get("/user/:email", async (req, res) => {
       email: user.email,
       name: user.name,
       idNumber: user.idNumber.trim(),
-      role: user.role
+      role: user.role,
+      id: user.id || user._id,
     };
 
     if (user.profileImage) {

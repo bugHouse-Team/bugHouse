@@ -2,6 +2,7 @@ const TutorAvailability = require('../models/TutorAvailability');
 const User = require('../models/User');
 const Slot = require('../models/Slot');
 const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 // POST /api/tutors/:tutorId/availability
 exports.createAvailability = async (req, res) => {
@@ -24,6 +25,7 @@ exports.createAvailability = async (req, res) => {
     }
 
     const existing = await TutorAvailability.findOne({ tutorId });
+
 
     if (existing) {
       console.log("Existing availability found:", existing);
@@ -113,7 +115,41 @@ exports.getAvailabilityByTutor = async (req, res) => {
       }
     }
 
+    const tutorId = req.params.tutorId;
+    if (!tutorId) {
+      return res.status(400).json({ message: "Missing tutorId parameter." });
+    }
+
+    try
+    {
+      const availability = await TutorAvailability.find({ tutorId: req.params.tutorId });
+
+      if (!availability || availability.length === 0) {
+        return res.status(404).json({ message: "No availability found for this tutor." });
+      }
+
+      res.status(200).json(availability);
+    } catch (err)
+    {
+      const user = await User.findOne({idNumber: tutorId});
+
+      if(user)
+      {
+        const availability = await TutorAvailability.find({ tutorId: user._id });
+
+        if (!availability || availability.length === 0) {
+          return res.status(404).json({ message: "No availability found for this tutor." });
+        }
+
+        res.status(200).json(availability);
+      } else
+      {
+        return res.status(404).json({ message: "User not found." });
+      }
+    }
+
   } catch (err) {
+    console.error("❌ Error fetching availability:", err);
     console.error("❌ Error fetching availability:", err);
     res.status(500).json({ error: err.message });
   }
@@ -126,6 +162,7 @@ exports.getTutorBookings = async (req, res) => {
     const bookings = await Slot.find({
       tutorId: req.params.tutorId,
       isBooked: true
+    }).populate('studentId');
     }).populate('studentId');
 
     res.json(bookings);
@@ -171,6 +208,7 @@ exports.getTutorReport = async (req, res) => {
 // GET /api/tutors
 exports.getAllTutors = async (req, res) => {
   try {
+    const tutors = await User.find({ role: { $in: ['Tutor', 'SysAdmin'] } });
     const tutors = await User.find({ role: { $in: ['Tutor', 'SysAdmin'] } });
     res.json(tutors);
   } catch (err) {

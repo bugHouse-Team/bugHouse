@@ -131,6 +131,7 @@ function AppointmentsPage({ user, refreshTrigger }) {
           setIsBookingModalOpen(false);
           fetchAppointments();
         }}
+        user={user}
       />
     </div>
   );
