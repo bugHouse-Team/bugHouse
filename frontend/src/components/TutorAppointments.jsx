@@ -74,7 +74,7 @@ function TutorAppointmentsPage({ user, refreshTrigger }) {
 
   const handleCancelAppointment = async () => {
     try {
-      await axios.post(`${API_URL}/api/slots/${selectedAppointment.id}/cancel`,{},{headers: {
+      await axios.delete(`${API_URL}/api/slots/${selectedAppointment.id}`,{headers: {
           Authorization: `Bearer ${token}`,
         },}).catch((err) => {
                 const status = err.response?.status;

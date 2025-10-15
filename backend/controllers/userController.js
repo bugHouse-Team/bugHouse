@@ -45,6 +45,21 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+// GET /api/users/tutors
+exports.getAllTutors = async (req, res) => {
+  try {
+    const users = await User.find({role: { $in: ['Tutor', 'SysAdmin'] }});
+
+    console.log("📋 Fetched tutors:", users);
+
+    return res.status(200).json(users);
+    
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch users' });
+  }
+};
+
 // GET /api/users/email/:email
 exports.getUserByEmail = async (req, res) => {
   try {
