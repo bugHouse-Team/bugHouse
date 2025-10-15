@@ -2,6 +2,7 @@ const TutorAvailability = require('../models/TutorAvailability');
 const User = require('../models/User');
 const Slot = require('../models/Slot');
 const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 // POST /api/tutors/:tutorId/availability
 exports.createAvailability = async (req, res) => {
@@ -24,6 +25,7 @@ exports.createAvailability = async (req, res) => {
     }
 
     const existing = await TutorAvailability.findOne({ tutorId });
+
 
     if (existing) {
       console.log("Existing availability found:", existing);
@@ -113,7 +115,41 @@ exports.getAvailabilityByTutor = async (req, res) => {
       }
     }
 
+    const tutorId = req.params.tutorId;
+    if (!tutorId) {
+      return res.status(400).json({ message: "Missing tutorId parameter." });
+    }
+
+    try
+    {
+      const availability = await TutorAvailability.find({ tutorId: req.params.tutorId });
+
+      if (!availability || availability.length === 0) {
+        return res.status(404).json({ message: "No availability found for this tutor." });
+      }
+
+      res.status(200).json(availability);
+    } catch (err)
+    {
+      const user = await User.findOne({idNumber: tutorId});
+
+      if(user)
+      {
+        const availability = await TutorAvailability.find({ tutorId: user._id });
+
+        if (!availability || availability.length === 0) {
+          return res.status(404).json({ message: "No availability found for this tutor." });
+        }
+
+        res.status(200).json(availability);
+      } else
+      {
+        return res.status(404).json({ message: "User not found." });
+      }
+    }
+
   } catch (err) {
+    console.error("❌ Error fetching availability:", err);
     console.error("❌ Error fetching availability:", err);
     res.status(500).json({ error: err.message });
   }
@@ -126,6 +162,7 @@ exports.getTutorBookings = async (req, res) => {
     const bookings = await Slot.find({
       tutorId: req.params.tutorId,
       isBooked: true
+    }).populate('studentId');
     }).populate('studentId');
 
     res.json(bookings);
@@ -172,6 +209,7 @@ exports.getTutorReport = async (req, res) => {
 exports.getAllTutors = async (req, res) => {
   try {
     const tutors = await User.find({ role: { $in: ['Tutor', 'SysAdmin'] } });
+    const tutors = await User.find({ role: { $in: ['Tutor', 'SysAdmin'] } });
     res.json(tutors);
   } catch (err) {
     console.error(err);
@@ -200,6 +238,7 @@ exports.getSubjects = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch subjects' });
   }
 };
+
 // GET /api/tutors/slots
 exports.getSlots = async (req, res) => {
   try {
@@ -211,9 +250,7 @@ exports.getSlots = async (req, res) => {
       timeZone: "America/Chicago",
     }));
 
-    const dayString = [
-      "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-    ][parsedDate.getDay()];
+    const dayString = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][parsedDate.getDay()];
 
     let availabilities;
     if (tutorEmail) {
@@ -234,64 +271,58 @@ exports.getSlots = async (req, res) => {
       availabilities = await TutorAvailability.find({
         isApproved: true,
         'weeklySchedule.day': dayString
-      }).populate('tutorId');
+      });
     }
 
-    if (availabilities.length === 0)
-      return res.json([]);
+    console.log(req.query);
 
-    const tutorIds = availabilities.map(a => a.tutorId._id || a.tutorId);
-    const startOfDay = new Date(parsedDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(parsedDate);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const slotQuery = {
-      tutorId: { $in: tutorIds },
-      date: { $gte: startOfDay.toISOString(), $lte: endOfDay.toISOString() },
-    };
-    const existingSlots = await Slot.find(slotQuery);
-
-    const existingSet = new Set(
-      existingSlots.map(s => `${s.tutorId}_${s.startTime}_${s.endTime}`)
-    );
+    console.log(availabilities);
 
     const slots = [];
-    const slotDuration = 30;
-
     for (const avail of availabilities) {
-      const tutor = avail.tutor || avail.tutorId;
       const schedules = avail.weeklySchedule.filter(b => b.day === dayString);
-
-      for (const schedule of schedules) {
+      
+      for(const schedule of schedules) {
         for (const block of schedule.blocks) {
-          if (subject && !block.subjects.includes(subject)) continue;
+          if(subject && !block.subjects.includes(subject)) continue;
+          
+          let [hour, minute] = block.startTime.split(":").map(Number);
 
-          const [startHour, startMinute] = block.startTime.split(":").map(Number);
-          const [endHour, endMinute] = block.endTime.split(":").map(Number);
+          const startTime = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), hour, minute);
 
-          let slotStart = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), startHour, startMinute);
-          const slotEnd = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), endHour, endMinute);
+          [hour, minute] = block.endTime.split(":").map(Number);
 
-          while (slotStart < slotEnd) {
-            const slotKey = `${tutor._id}_${slotStart.toISOString().substring(11, 16)}_${new Date(slotStart.getTime() + slotDuration * 60000).toISOString().substring(11, 16)}`;
+          const endTime = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), hour, minute);
+          
+          const slotDuration = 30;
+          
+          while (startTime < endTime) {
+            const slotExists = await Slot.findOne({
+              tutorId: avail.tutorId,
+              date: startTime.toISOString(),
+              startTime: startTime.toISOString().substring(11,16),
+              endTime: new Date(startTime.getTime() + slotDuration*60000).toISOString().substring(11,16)
+            });
 
-            if (!existingSet.has(slotKey)) {
+            if (!slotExists) {
+              const tutor = await User.findOne({ _id: avail.tutorId });
+
               slots.push({
                 tutorId: tutor,
-                date: parsedDate.toISOString(),
-                startTime: slotStart.toISOString().substring(11, 16),
-                endTime: new Date(slotStart.getTime() + slotDuration * 60000).toISOString().substring(11, 16),
+                date: startTime.toISOString(),
+                startTime: startTime.toISOString().substring(11,16),
+                endTime: new Date(startTime.getTime() + slotDuration*60000).toISOString().substring(11,16),
                 subjects: block.subjects,
                 isBooked: false,
-                id: new mongoose.Types.ObjectId(),
+                id: new mongoose.Types.ObjectId()
               });
             }
 
-            slotStart.setMinutes(slotStart.getMinutes() + slotDuration);
+            startTime.setMinutes(startTime.getMinutes() + slotDuration);
           }
         }
       }
+      
     }
 
     res.json(slots);
