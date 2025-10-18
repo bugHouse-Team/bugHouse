@@ -11,131 +11,144 @@ import {
 } from "firebase/auth";
 
 function LandingPage() {
-  const [storedId, setStoredId] = useState(""); // ID from database
-  const [userObject, setUserObject] = useState({}); // User object
-  const [swipeMode, setSwipeMode] = useState(true); // Toggle between swipe/manual
-  const [manualId, setManualId] = useState(""); // Manually entered ID
-  const [error, setError] = useState(""); // Error message
-  const [loading, setLoading] = useState(true); // Track loading state
+  const [storedId, setStoredId] = useState("");
+  const [userObject, setUserObject] = useState({});
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
-  const [userEmail, setUserEmail] = useState(""); // From Firebase
+  const [userEmail, setUserEmail] = useState("");
   const [role, setRole] = useState("");
 
   const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-  const token = localStorage.getItem("firebase_token");
 
-  // ✅ Step 1: Handle Firebase email link login
+  // ✅ Step 1: Handle Firebase login flow
   useEffect(() => {
     const auth = getAuth();
-    const storedEmail = window.localStorage.getItem("emailForSignIn");
 
-    if (isSignInWithEmailLink(auth, window.location.href)) {
-      const emailToUse =
-        storedEmail ||
-        window.prompt("Please confirm your email for sign-in:") ||
-        "";
+    const checkLogin = async () => {
+      try {
+        let email = localStorage.getItem("emailForSignIn");
+        const isLink = isSignInWithEmailLink(auth, window.location.href);
 
-      if (!emailToUse) return;
+        if (isLink) {
+          if (!email) {
+            email = window.prompt("Please confirm your email for sign-in:");
+            if (!email) {
+              setLoading(false);
+              return;
+            }
+          }
 
-      signInWithEmailLink(auth, emailToUse, window.location.href)
-        .then(async (result) => {
-          console.log("✅ Firebase login complete");
+          // Sign in with email link
+          const result = await signInWithEmailLink(auth, email, window.location.href);
+          const idToken = await result.user.getIdToken(true);
 
-          // Get Firebase JWT
-          const idToken = await result.user.getIdToken();
-          console.log("🔥 Firebase JWT:", idToken);
-
+          // Store tokens
           localStorage.setItem("firebase_token", idToken);
-          window.localStorage.setItem("emailForSignIn", emailToUse);
-          setUserEmail(emailToUse);
-        })
-        .catch((err) => {
-          console.error("❌ Firebase sign-in failed:", err);
-        });
-    }
-  }, []);
+          localStorage.setItem("emailForSignIn", email);
 
-  // ✅ Step 2: Load stored email (if already logged in)
-  useEffect(() => {
-    const storedEmail = localStorage.getItem("emailForSignIn") || "";
-    if (storedEmail) {
-      setUserEmail(storedEmail);
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  // ✅ Step 3: Fetch user data from backend
-  useEffect(() => {
-    if (!userEmail) {
-      setLoading(false);
-      return;
-    }
-
-    axios
-      .get(`${API_URL}/api/users/email/${userEmail}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        if (response.data) {
-          console.log("✅ User found:", response.data);
-          setUserObject(response.data);
-          setStoredId(response.data.idNumber.trim());
-          setRole(response.data.role);
-          localStorage.setItem("id", response.data.idNumber);
-          localStorage.setItem("role", response.data.role);
-          localStorage.setItem("user", JSON.stringify(response.data));
-          setLoading(false);
+          setUserEmail(email);
           setAuthenticated(true);
-          navigate(getDashboardPath(response.data.role));
+
+          // Remove the query params from URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (email) {
+          // Already logged in previously
+          setUserEmail(email);
+          setAuthenticated(true);
         } else {
-          console.error("❌ User not found, redirecting to signup...");
-          navigate("/signup", { state: { email: userEmail } });
+          setLoading(false);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
+        console.error("❌ Firebase login error:", err);
+        setError("Login failed. Please try again.");
+        setLoading(false);
+      }
+    };
+
+    checkLogin();
+  }, []);
+
+  // ✅ Step 2: Fetch user data from backend only when email & token are ready
+  useEffect(() => {
+    const token = localStorage.getItem("firebase_token");
+    if (!userEmail || !token) return;
+
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/users/email/${userEmail}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = response.data;
+        console.log("✅ User found:", data);
+
+        setUserObject(data);
+        setStoredId(data.idNumber?.trim() || "");
+        setRole(data.role);
+
+        // Store locally
+        localStorage.setItem("id", data.idNumber);
+        localStorage.setItem("role", data.role);
+        localStorage.setItem("user", JSON.stringify(data));
+
+        setAuthenticated(true);
+        setLoading(false);
+
+        navigate(getDashboardPath(data.role));
+      } catch (err) {
         const status = err.response?.status;
+        console.warn("⚠️ Backend fetch failed:", status, err);
+
         if (status === 404 || status === 401) {
-          console.warn("⚠️ User not found or unauthorized. Redirecting to signup...");
-          // Clear old data to avoid wrong redirects
           localStorage.removeItem("role");
           localStorage.removeItem("user");
           navigate("/signup", { state: { email: userEmail } });
         } else if (status === 302) {
-          console.warn("🚫 302 Error - redirecting to login...");
           navigate("/signin");
         } else {
-          console.error("❌ Error fetching user data:", err);
           setError("Failed to fetch user data.");
           setLoading(false);
         }
-      });
-  }, [userEmail, API_URL]);
+      }
+    };
 
-  // ✅ Dashboard path helper
+    fetchUserData();
+  }, [userEmail, API_URL, navigate]);
+
+  // ✅ Dashboard route helper
   const getDashboardPath = (role) => {
     switch (role) {
       case "Student":
         return "/student-dashboard";
       case "Tutor":
         return "/tutor-dashboard";
-      case "SysAdmin":
       case "Admin":
+      case "SysAdmin":
         return "/admin-dashboard";
       default:
         return "/";
     }
   };
 
-  if (loading) return <div className="loading">⏳ Loading...</div>;
+  // ✅ UI Rendering
+  if (loading) {
+    return <div className="loading">⏳ Loading...</div>;
+  }
 
   return (
     <div className="landing-page">
       <HeaderBar />
 
       <div className="content">
+        {error ? (
+          <p className="error">{error}</p>
+        ) : authenticated ? (
           <p>✅ Authentication Successful! Redirecting...</p>
+        ) : (
+          <p>Please check your email to complete sign-in.</p>
+        )}
       </div>
 
       <InfoPanel />

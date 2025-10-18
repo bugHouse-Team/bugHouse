@@ -48,10 +48,7 @@ exports.approveAvailability = async (req, res) => {
       return res.status(400).json({ message: 'Availability already approved' });
     }
 
-    const deleted = await TutorAvailability.deleteMany({ tutorId: availability.tutorId, _id: { $ne: availabilityId } });
-    if (deleted) {
-      await Slot.deleteMany({ tutorId: deleted.tutorId, _id: { $ne: availabilityId } });
-    }
+    await TutorAvailability.deleteMany({ tutorId: availability.tutorId, _id: { $ne: availabilityId } });
 
     availability.isApproved = true;
     await availability.save();
@@ -99,7 +96,7 @@ exports.getAllAppointments = async (req, res) => {
 
   try {
     const bookings = await Slot.find({ isBooked: true })
-      .select("_id date startTime subjects studentId tutorId")
+      .select("_id date startTime subjects studentId tutorId endTime")
       .populate("studentId", "name email")
       .populate("tutorId", "name email")
       .lean();
@@ -108,6 +105,7 @@ exports.getAllAppointments = async (req, res) => {
       _id: b._id,
       date: b.date,
       startTime: b.startTime,
+      endTime: b.endTime,
       subjects: b.subjects,
       studentId: b.studentId,
       tutorId: b.tutorId,

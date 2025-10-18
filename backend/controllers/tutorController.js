@@ -126,9 +126,23 @@ exports.getTutorBookings = async (req, res) => {
     const bookings = await Slot.find({
       tutorId: req.params.tutorId,
       isBooked: true
-    }).populate('studentId');
+    }).select("_id date startTime subjects studentId tutorId endTime")
+      .populate("studentId", "name email")
+      .populate("tutorId", "name email")
+      .lean();
 
-    res.json(bookings);
+    const formatted = bookings.map(b => ({
+      _id: b._id,
+      date: b.date,
+      startTime: b.startTime,
+      endTime: b.endTime,
+      subjects: b.subjects,
+      studentId: b.studentId,
+      tutorId: b.tutorId,
+    }));
+
+    res.status(200).json(formatted);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to fetch tutor bookings' });
