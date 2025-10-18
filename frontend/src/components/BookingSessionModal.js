@@ -27,7 +27,6 @@ const BookingSessionModal = ({ isOpen, onClose, user }) => {
       params: { date: today.toISOString() },
       headers: { Authorization: `Bearer ${token}` },
     }).then((res) => {
-      console.log("Fetched slots:", res.data);
       setSlots(res.data);
     }).catch((err) => {
       console.error("Failed to fetch slots:", err);
@@ -41,8 +40,8 @@ const BookingSessionModal = ({ isOpen, onClose, user }) => {
                 tutorEmail: filters.tutorEmail },
       headers: { Authorization: `Bearer ${token}` },
     }).then((res) => {
-      console.log("Fetched slots:", res.data);
       setFilteredSlots(res.data);
+      setSlots(res.data);
       setSelectedSlotId(null);
     }).catch((err) => {
       console.error("Failed to fetch slots:", err);
@@ -65,12 +64,9 @@ const BookingSessionModal = ({ isOpen, onClose, user }) => {
         studentId = JSON.parse(localStorage.getItem("user")).id;
       } else
       {
-        studentId = user?._id;
+        studentId = user.id;
       }
-
-      console.log(studentId);
-      console.log(user);
-
+      console.log(selectedSlot.tutorId);
       await axios.post(`${API_URL}/api/slots/book`, { studentId : studentId, date: selectedSlot.date, startTime: selectedSlot.startTime, endTime : selectedSlot.endTime, tutorId : selectedSlot.tutorId.id, subjects: selectedSlot.subjects, },{headers: {
           Authorization: `Bearer ${token}`,
         },});

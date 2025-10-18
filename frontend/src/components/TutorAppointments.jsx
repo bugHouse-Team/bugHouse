@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-function TutorAppointmentsPage({ user, refreshTrigger }) {
+function TutorAppointmentsPage({ user, onChange, refreshTrigger }) {
   const [appointments, setAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const navigate = useNavigate();
@@ -88,6 +88,9 @@ function TutorAppointmentsPage({ user, refreshTrigger }) {
       setAppointments((prev) => prev.filter((appt) => appt.id !== selectedAppointment.id));
       toast.success("Appointment Cancelled Successfully");
       setSelectedAppointment(null);
+
+      if(onChange) onChange();
+      
     } catch (err) {
       console.error("Error canceling appointment:", err);
       toast.error("Failed to cancel appointment.");

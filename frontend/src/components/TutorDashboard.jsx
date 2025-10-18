@@ -25,7 +25,13 @@ function TutorDashboard({ user }) {
   const token = localStorage.getItem("firebase_token");
 
   const navigate = useNavigate();
-  
+
+  const [refreshAppointmentsFlag, setRefreshAppointmentsFlag] = useState(false);
+
+  const triggerRefreshAppointments = () => {
+    setRefreshAppointmentsFlag((prev) => !prev);
+  };
+
   const handleNewRequest = () => {
     setIsModalOpen(true);
   };
@@ -49,7 +55,7 @@ function TutorDashboard({ user }) {
         </div>
 
         <div className="tutor-section-box tutor-appointments">
-          <TutorAppointments user={user} refreshTrigger={availabilityKey} />
+          <TutorAppointments user={user} onChange={triggerRefreshAppointments} refreshTrigger={refreshAppointmentsFlag}/>
         </div>
 
         <div className="tutor-section-box tutor-report">
@@ -57,7 +63,7 @@ function TutorDashboard({ user }) {
         </div>
 
         <div className="tutor-section-box tutor-calendar">
-          <Calendar user={user} isTutor={true} />
+          <Calendar user={user} isTutor={true} onChange={triggerRefreshAppointments} refreshTrigger={refreshAppointmentsFlag} />
         </div>
 
         <main className="tutor-right-panel">
