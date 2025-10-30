@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-require("express-async-errors");
 require("dotenv").config();
 const connectDB = require('./config/db');
 
@@ -25,6 +24,7 @@ const adminRoutes = require('./routes/admin');
 const slotRoute = require('./routes/slot');
 const studentRoute = require('./routes/student');
 const profileRoutes = require('./routes/profile');
+const attendanceRoutes = require('./routes/attendance');
 
 
 // Mount your routes here
@@ -34,6 +34,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/students', studentRoute);
 app.use('/api/slots', slotRoute);
 app.use('/api/profile', profileRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 
 app.use((err, req, res, next) => {
