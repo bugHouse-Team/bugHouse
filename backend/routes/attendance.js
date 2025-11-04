@@ -34,9 +34,33 @@ module.exports = router;
 
 const express = require("express");
 const router = express.Router();
+const User = require('../models/User');
+const Attendance = require('../models/Attendance');
 
 let recentCheckIns = [];
 let lastNameBuffer = null; // store last name until ID arrives
+
+
+async function getUserNameByIdNumber(idNumber) {
+  if (!idNumber) {
+    throw new Error("idNumber required");
+  }
+
+  const user = await User.findOne({ idNumber: String(idNumber) });
+
+  if (!user) {
+    return "Unknown";
+  }
+
+  return user.name;
+}
+
+function getUserBasicByIdNumber(idNumber) {
+  return User.findOne({ idNumber: String(idNumber) })
+    .select("name email idNumber")
+    .lean(); // returns { _id, name, email, idNumber } or null
+}
+
 
 // ✅ Helper: Parse swipe data
 function parseSwipe(rawInput) {
@@ -60,47 +84,71 @@ function parseSwipe(rawInput) {
   return { id, name };
 }
 
-// ✅ POST: check-in
 router.post("/checkin", (req, res) => {
   const { id: rawInput } = req.body;
   if (!rawInput) return res.status(400).json({ message: "Swipe data required" });
 
-  const { id, name } = parseSwipe(rawInput);
+  let { id, name } = parseSwipe(rawInput);
 
-  // If Track 1 only (name), save it for later
-  if (name && !id) {
-    lastNameBuffer = name;
-    return res.status(200).json({ message: "Name captured, waiting for ID track" });
+  // if manual type-in looks like UTA ID
+  if (rawInput.startsWith("100")) id = rawInput.trim();
+
+  if (!id) {
+    return res.status(400).json({ message: "Invalid swipe data" });
   }
 
-  // If Track 2 / 3 only (ID), use buffered name if exists
-  if (id) {
-    const finalName = name || lastNameBuffer || "Unknown";
-    lastNameBuffer = null; // reset buffer after using
+  // fetch name from DB asynchronously
+getUserBasicByIdNumber(id)
+    .then(user => {
+      const finalName = (user?.name) || name || "Unknown";
+      const email = user?.email || "unknown@unknown";
 
-    // Prevent duplicates
-    const existing = recentCheckIns.find(entry => entry.id === id);
-    if (existing) {
-      return res.status(200).json({ message: "Student already checked in", checkIn: existing });
-    }
+      if(finalName == "Unknown") {
+        return res.status(200).json({ message: "Error: User not registered" });
+      }
 
-    const checkIn = {
-      id,
-      name: finalName,
-      timestamp: new Date().toISOString(),
-    };
+      const checkIn = {
+        id,
+        name: finalName,
+        timestamp: new Date().toISOString(),
+      };
+      
+      // Prevent duplicates
+      const existing = recentCheckIns.find(entry => entry.id === id);
+      if (existing) {
+        // if already signed in --> sign out
+        return Attendance.create({
+          email,
+          type: "Sign Out",
+          timestamp: new Date(checkIn.timestamp),
+        })
+        .then(() => {
+          // remove from check-in array
+          recentCheckIns.splice(recentCheckIns.indexOf(existing), 1);
+          return res.status(200).json({ message: "Student checked out successfully", checkIn: existing });
+        });
+      }
 
-    recentCheckIns.unshift(checkIn);
-    if (recentCheckIns.length > 50) recentCheckIns.pop();
+      // Write to Mongo attendance history
+      return Attendance.create({
+        email,
+        type: "Sign In",
+        timestamp: new Date(checkIn.timestamp),
+      })
+      .then(() => {
+        // keep recent in memory list
+        recentCheckIns.unshift(checkIn);
+        if (recentCheckIns.length > 50) recentCheckIns.pop();
 
-    console.log(
-      `✅ ID: ${checkIn.id} — Name: ${checkIn.name} — Time: ${new Date(checkIn.timestamp).toLocaleTimeString()}`
-    );
+        console.log(`✅ ID: ${checkIn.id} — Name: ${checkIn.name} — Time: ${new Date(checkIn.timestamp).toLocaleTimeString()}`);
 
-    return res.status(200).json({ message: "Check-in recorded", checkIn });
-  }
-
-  return res.status(400).json({ message: "Invalid swipe data" });
+        return res.status(200).json({ message: "Check-in recorded", checkIn });
+      });
+    })
+    .catch(err => {
+      console.error("checkin lookup error:", err);
+      return res.status(400).json({ message: "Invalid check-in data" });
+    });
 });
 
 // ✅ GET: recent check-ins

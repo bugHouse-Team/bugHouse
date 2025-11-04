@@ -18,7 +18,7 @@ const StudentAttendance = ({ user }) => {
 
     const logAttendance = async () => {
       try {
-        console.log("📤 Sending POST to log attendance...");
+        /*console.log("📤 Sending POST to log attendance...");
         await axios.post("/api/students/attendance/log",
           {email: user.email,
           type: "Sign In",}
@@ -33,7 +33,7 @@ const StudentAttendance = ({ user }) => {
                     console.error("❌ Error:", err);
                 }
             });
-        console.log("✅ Attendance logged");
+        console.log("✅ Attendance logged");*/
         fetchAttendance();
       } catch (err) {
         console.error("❌ Failed to log sign in:", err);
@@ -59,9 +59,11 @@ const StudentAttendance = ({ user }) => {
           });
     };
 
-    logAttendance();
+    logAttendance(); // no need to log sign-ins as attendance
   }, [user?.email]);
 
+  // sign out when window is closed --> log signout as "attendance"
+  /*
   useEffect(() => {
     if (!user?.email) return;
 
@@ -82,7 +84,7 @@ const StudentAttendance = ({ user }) => {
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [user?.email]);
+  }, [user?.email]); */
 
   return (
     <div className="attendance-container">
