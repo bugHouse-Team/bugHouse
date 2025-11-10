@@ -1,15 +1,14 @@
 .outerPanel {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 30%;
-  height: 81%;
-  background-color: #9AABD0;
-  border: 2px solid #f38223;
-  border-radius: 23px;
-  box-sizing: border-box;
-  padding: 1.5rem;
-  margin: 1.5rem;
+  background-color: #e9effc;
+    border: 2px solid #f47c20;
+    border-radius: 22px;
+    margin-top: 1rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    font-family: "Nunito Sans", sans-serif;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .innerPanel {
@@ -70,12 +69,16 @@
 }
 
 .scrollInner {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  margin-right: -1rem;
-  padding-right: 1rem;
-  box-sizing: border-box;
+ isplay: flex;
+  flex-wrap: wrap;        /* allows wrapping to multiple rows (enables vertical scroll) */
+  gap: 1rem;
+  
+  overflow-x: auto;       /* enable horizontal scroll */
+  overflow-y: auto;       /* enable vertical scroll */
+  
+  max-height: 50vh;       /* optional: limit height of list area */
+  white-space: normal;    /* allows wrapping to next line */
+  padding: 0.5rem;
 }
 
 .scrollInner::-webkit-scrollbar {
@@ -90,9 +93,12 @@
 }
 
 .peopleList {
-  padding-left: 0;
-  list-style: none;
+display: flex;
+  flex-wrap: wrap;        /* wrap items to new lines */
+  gap: 1rem;
+  padding: 0;
   margin: 0;
+  list-style: none;
 }
 
 .personItem {

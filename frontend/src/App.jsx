@@ -7,6 +7,8 @@ import RoleTestPage from "./components/RoleTestPage";
 import StudentDashboard from "./components/StudentDashboard";
 import TutorDashboard from "./components/TutorDashboard";
 import AdminDashboard from "./components/AdminDashboard";
+import SwipeAttendance from "./components/SwipeAttendance";
+
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"
 
@@ -49,6 +51,8 @@ function App() {
       <Route path="/signup" element={<SignUpPage />} />
       <Route path="/landing" element={<LandingPage />} />
       <Route path="/role-test" element={<RoleTestPage />} />
+      <Route path="/swipe" element={<SwipeAttendance />} />
+
 
       {/* Student protected route */}
       <Route

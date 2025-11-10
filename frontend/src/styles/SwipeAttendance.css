@@ -1,0 +1,71 @@
+body {
+    background: url('../assets/images/school.png') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center;    /* Center vertically */
+    height: 100vh;          /* Full viewport height */
+}
+.swipe-container {
+  width: 100%;
+    max-width: 400px;
+    background-color: #60a9f8; /* Light blue background */
+    padding: 20px;
+    border: 2px solid orange; /* Orange border */
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.swipe-title {
+  color: #333;
+    margin-bottom: 20px;
+}
+
+/* .swipe-instructions {
+  color: #666;
+  margin-bottom: 1rem;
+} */
+
+.swipe-form {
+  display: flex;
+  flex-direction: column;  /* Stack label, input, and button vertically */
+  align-items: center;     /* Center them horizontally */
+  gap: 10px;               /* Add space between elements */
+}
+
+
+.swipe-input {
+  width: 300px;
+  padding: 10px;
+  font-size: 1rem;
+  border: 2px solid #f38223;
+  border-radius: 8px;
+}
+
+.swipe-container button {
+  background-color: orange;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.swipe-container button:hover {
+  background-color: #d66f1e;
+}
+
+.swipe-message {
+  margin-top: 0.5rem;
+  color: #333;
+  font-weight: 600;
+}
+
