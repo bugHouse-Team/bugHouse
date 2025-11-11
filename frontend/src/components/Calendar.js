@@ -8,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-const Calendar = ({ user, isAdmin, isTutor }) => {
+const Calendar = ({ user, isAdmin, isTutor, onChange, refreshTrigger }) => {
   const [events, setEvents] = useState({});
   const [detailedEvents, setDetailedEvents] = useState({}); // ⬅️ for admin detailed view
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -60,19 +60,17 @@ const Calendar = ({ user, isAdmin, isTutor }) => {
             if (!groupedEvents[dateStr].includes("Appointment")) {
               groupedEvents[dateStr].push("Appointment");
             }
-
-            if (!detailedMap[dateStr]) detailedMap[dateStr] = [];
-            detailedMap[dateStr].push({
-              bookingId: booking._id,
-              studentName: booking.studentId?.name || "Unknown Student",
-              tutorName: booking.tutorId?.name || "Unknown Tutor",
-              course: booking.subjects?.join(", ") || "Session",
-              time: booking.startTime || "N/A",
-            });
           }
-        });
 
-        console.log(detailedMap);
+          if (!detailedMap[dateStr]) detailedMap[dateStr] = [];
+          detailedMap[dateStr].push({
+            bookingId: booking._id,
+            studentName: booking.studentId?.name || "Unknown Student",
+            tutorName: booking.tutorId?.name || "Unknown Tutor",
+            course: booking.subjects?.join(", ") || "Session",
+            time: (booking.startTime || "N/A") + '-' + (booking.endTime || "N/A"),
+          });
+        });
 
         setEvents(groupedEvents);
         setDetailedEvents(detailedMap);
@@ -84,7 +82,7 @@ const Calendar = ({ user, isAdmin, isTutor }) => {
     fetchAppointments();
     const interval = setInterval(fetchAppointments, 5000);
     return () => clearInterval(interval);
-  }, [user, isAdmin, isTutor]);
+  }, [user, isAdmin, isTutor, refreshTrigger]);
 
 
   const openModal = (date) => {
@@ -99,7 +97,6 @@ const Calendar = ({ user, isAdmin, isTutor }) => {
 
   const cancelBooking = async (bookingId) => {
     try {
-      console.log(bookingId);
       await axios.delete(`${API_URL}/api/slots/${bookingId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -130,6 +127,8 @@ const Calendar = ({ user, isAdmin, isTutor }) => {
 
         return updated;
       });
+
+      if (onChange) onChange();
 
       toast.success("Appointment Cancelled Successfully");
     } catch (err) {
@@ -180,16 +179,13 @@ const Calendar = ({ user, isAdmin, isTutor }) => {
               {/* Student/Tutor here */}
               {!isAdmin &&
                 (events[dateStr] || []).map((e, idx) => (
-                  <div key={idx} className="event">
+                  <div
+                    className="event"
+                    key={idx}
+                    onClick={() => openModal(dateStr)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     {e.label}
-                    {isTutor && (
-                      <button
-                        className="cancel-btn"
-                        onClick={() => cancelBooking(e.bookingId)}
-                      >
-                        Cancel
-                      </button>
-                    )}
                   </div>
               ))}
             </div>
@@ -224,37 +220,21 @@ const Calendar = ({ user, isAdmin, isTutor }) => {
           <div className="calendar-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Appointments on {selectedDate}</h3>
             <ul>
-              {(isAdmin ? detailedEvents[selectedDate] : events[selectedDate])?.map((item, idx) => (
+              {detailedEvents[selectedDate]?.map((item, idx) => (
                 <li key={idx}>
-                  {isAdmin ? (
-                    <>
-                      <strong>Student:</strong> {item.studentName}<br />
-                      <strong>Tutor:</strong> {item.tutorName}<br />
-                      <strong>Course:</strong> {item.course}<br />
-                      <strong>Time:</strong> {item.time}<br />
-                      {(isAdmin || isTutor) && (
-                        <button
-                          className="cancel-btn"
-                          onClick={() => cancelBooking(item.bookingId)}
-                        >
-                          Cancel
-                        </button>
-                      )}
-                      <hr />
-                    </>
-                  ) : (
-                    <>
-                      {item.label}
-                      {isTutor && (
-                        <button
-                          className="cancel-btn"
-                          onClick={() => cancelBooking(item.bookingId)}
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </>
-                  )}
+                  <>
+                    <strong>Student:</strong> {item.studentName}<br />
+                    <strong>Tutor:</strong> {item.tutorName}<br />
+                    <strong>Course:</strong> {item.course}<br />
+                    <strong>Time:</strong> {item.time}<br />
+                    <button
+                      className="cancel-btn"
+                      onClick={() => cancelBooking(item.bookingId)}
+                    >
+                      Cancel
+                    </button>
+                    <hr />
+                  </>
                 </li>
               ))}
             </ul>

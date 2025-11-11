@@ -60,8 +60,22 @@ exports.getStudentBookings = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const bookings = await Slot.find({ studentId: req.params.studentId }).populate('tutorId');
-    res.json(bookings);
+    const bookings = await Slot.find({ studentId: req.params.studentId }).select("_id date startTime subjects studentId tutorId endTime")
+      .populate("studentId", "name email")
+      .populate("tutorId", "name email")
+      .lean();
+
+    const formatted = bookings.map(b => ({
+      _id: b._id,
+      date: b.date,
+      startTime: b.startTime,
+      endTime: b.endTime,
+      subjects: b.subjects,
+      studentId: b.studentId,
+      tutorId: b.tutorId,
+    }));
+
+    res.status(200).json(formatted);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to fetch student bookings' });

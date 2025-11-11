@@ -32,15 +32,15 @@ const StudentDashboard = ({ user }) => {
         </div>
 
         <div className="student-section-box student-available-turors">
-          <TodaysAvailableSlots user={user} onBookSuccess={triggerRefreshAppointments} />
+          <TodaysAvailableSlots user={user} onChange={triggerRefreshAppointments} refreshTrigger={refreshAppointmentsFlag} />
         </div>
 
         <div className="student-section-box student-appointments">
-          <AppointmentsPage user={user} refreshTrigger={refreshAppointmentsFlag} />
+          <AppointmentsPage user={user} onChange={triggerRefreshAppointments} refreshTrigger={refreshAppointmentsFlag} />
         </div>
 
         <div className="student-section-box student-calendar">
-        <Calendar user={user} />
+        <Calendar user={user} onChange={triggerRefreshAppointments} refreshTrigger={refreshAppointmentsFlag} />
         </div>
       </main>
 

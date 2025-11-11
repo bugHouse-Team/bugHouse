@@ -71,7 +71,7 @@ function HeaderBar() {
     const handleSignOutClick = async () => {
         const email = localStorage.getItem("emailForSignIn");
     
-        if (email) {
+        /*if (email) {
             await axios.post(`${API_URL}/api/students/attendance/log`,
                 {email, type:"Sign Out"},
                 {
@@ -83,7 +83,7 @@ function HeaderBar() {
                 }).catch((err) => {
                     console.error("❌ Failed to log sign out:", err);
                 });
-        }
+        }*/
 
         setSignoutSuccess(true);
         

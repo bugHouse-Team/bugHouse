@@ -4,7 +4,7 @@
   top: 6vh;
   height: calc(100vh - 13vh); /* ≈ 2 vh top  + 11 vh header/footer  */
   width: 25vh;
-
+  overflow-y: auto;
   background: #204eb1;
   border: 5px solid #f38223;
   border-radius: 23px;
@@ -12,6 +12,7 @@
   flex-direction: column;
   padding: 1.5rem;
 }
+
 
 /* ‑‑‑‑‑ LEFT PANE ‑‑‑‑‑ */
 .leftPanel {

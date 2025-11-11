@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 
-function TodaysAvailableSlots({ user, onSessionBooked }) {
+function TodaysAvailableSlots({ user, onChange, refreshTrigger }) {
   const [slots, setSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const studentId = user.id;
@@ -18,7 +18,7 @@ function TodaysAvailableSlots({ user, onSessionBooked }) {
 
   useEffect(() => {
     if (studentId) fetchTodaysSlots();
-  }, [studentId]);
+  }, [studentId, refreshTrigger]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -75,7 +75,7 @@ function TodaysAvailableSlots({ user, onSessionBooked }) {
       toast.success(`Session booked with ${selectedSlot.tutor}`);
       setSlots((prev) => prev.filter((s) => s.id !== selectedSlot.id));
       setSelectedSlot(null);
-      if (onSessionBooked) onSessionBooked();
+      if (onChange) onChange();
     } catch (err) {
       console.error("Error booking slot:", err);
       toast.error("Booking failed. Please try again.");
