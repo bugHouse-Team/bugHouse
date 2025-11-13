@@ -9,6 +9,7 @@ function AttendanceTrackingBox() {
     try {
       const res = await fetch("http://localhost:5000/api/attendance/recent");
       const data = await res.json();
+      console.log(data);
       setRecentCheckIns(data);
     } catch (err) {
       console.error("Failed to fetch recent check-ins:", err);
