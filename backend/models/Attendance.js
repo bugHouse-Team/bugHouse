@@ -1,12 +1,51 @@
+// backend/models/Attendance.js
 const mongoose = require("mongoose");
 
-const AttendanceSchema = new mongoose.Schema({
-  email: { type: String, required: true },
-  type: { type: String, enum: ["Sign In", "Sign Out"], default: "Sign In" },
-  timestamp: { type: Date, default: Date.now }
-});
+// ----------------- VisitSchema (embedded per visit) -----------------
+const VisitSchema = new mongoose.Schema(
+  {
+    checkIn: { type: Date, required: true },
+    checkOut: { type: Date }, // set when they sign out
 
-// ✅ Confirm model is loaded (for debug purposes)
-console.log("✅ Attendance model loaded");
+    // Optional extras for later analytics
+    bughouse: { type: String }, // e.g. "CS1 BugHouse"
+    tutorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    tutorName: { type: String },
+  },
+  {
+    _id: true, // each visit gets its own _id
+  }
+);
 
-module.exports = mongoose.model("Attendance", AttendanceSchema);
+// ----------------- AttendanceSchema (one doc per student) -----------------
+const AttendanceSchema = new mongoose.Schema(
+  {
+    // One document per student
+    studentId: { type: String, required: true, unique: true }, // UTA ID / card ID
+    email: { type: String, required: true },
+    name: { type: String, required: true },
+
+    // Current sign-in status (overall, based on latest visit)
+    type: {
+      type: String,
+      enum: ["Signed-IN", "Signed-OUT"],
+      default: "Signed-OUT",
+      required: true,
+    },
+
+    // All check-in/out pairs for this student
+    visits: [VisitSchema],
+  },
+  {
+    timestamps: true,              // createdAt / updatedAt
+    collection: "mod_attendances", // 👈 use this collection name
+  }
+);
+
+// Helpful indexes
+AttendanceSchema.index({ studentId: 1 });
+AttendanceSchema.index({ email: 1 });
+
+console.log("✅ Attendance model loaded (mod_attendances)");
+
+module.exports = mongoose.model("ModAttendance", AttendanceSchema);

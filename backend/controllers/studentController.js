@@ -5,8 +5,8 @@ const Attendance = require("../models/Attendance");
 // GET /api/students
 exports.getAllStudents = async (req, res) => {
   try {
-    if 
-    (
+    if
+      (
       req.user.role !== "Admin" &&
       req.user.role !== "SysAdmin"
     ) {
@@ -145,15 +145,81 @@ exports.logAttendance = async (req, res) => {
   }
 };
 
+// GET /api/students/attendance/:email
+// Returns an array of visits: [{ visitNumber, checkIn, checkOut }, ...]
 exports.getAttendance = async (req, res) => {
-  console.log("📥 GET /attendance → email:", req.params.email);
-
   try {
-    const records = await Attendance.find({ email: req.params.email }).sort({ timestamp: -1 });
-    console.log(`📊 Found ${records.length} attendance records`);
-    res.status(200).json(records);
+    const emailParam = String(req.params.email || "").toLowerCase();
+
+    if (!emailParam) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    // Find the per-student attendance doc in mod_attendances
+    const attDoc = await Attendance.findOne({ email: emailParam }).lean();
+
+    if (!attDoc) {
+      // No attendance yet
+      return res.json([]);
+    }
+
+    // Build visits array with visitNumber, checkIn, checkOut
+    let visits = (attDoc.visits || []).map((v, index) => ({
+      visitNumber: index + 1,
+      checkIn: v.checkIn || null,
+      checkOut: v.checkOut || null,
+    }));
+
+    // Optional: sort newest first
+    visits = visits.sort((a, b) => {
+      const tA = a.checkIn ? new Date(a.checkIn).getTime() : 0;
+      const tB = b.checkIn ? new Date(b.checkIn).getTime() : 0;
+      return tB - tA;
+    });
+
+    return res.json(visits);
   } catch (err) {
-    console.error("❌ Error fetching attendance:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("getAttendance error:", err);
+    return res
+      .status(500)
+      .json({ message: "Failed to load attendance history." });
+  }
+};
+
+
+// GET /api/students/attendance/:email
+exports.getAttendanceByEmail = async (req, res) => {
+  try {
+    const emailParam = String(req.params.email || "").toLowerCase();
+    if (!emailParam) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    // Find student's attendance doc in mod_attendances
+    const attDoc = await Attendance.findOne({ email: emailParam }).lean();
+
+    if (!attDoc) {
+      return res.json([]); // no visits yet
+    }
+
+    const visits = (attDoc.visits || []).map((v, index) => ({
+      visitNumber: index + 1,
+      checkIn: v.checkIn,
+      checkOut: v.checkOut || null,
+    }));
+
+    // optional: newest first
+    visits.sort((a, b) => {
+      const tA = a.checkIn ? new Date(a.checkIn).getTime() : 0;
+      const tB = b.checkIn ? new Date(b.checkIn).getTime() : 0;
+      return tB - tA;
+    });
+
+    return res.json(visits);
+  } catch (err) {
+    console.error("getAttendanceByEmail error:", err);
+    return res
+      .status(500)
+      .json({ message: "Failed to load attendance history." });
   }
 };

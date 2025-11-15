@@ -1,159 +1,231 @@
-/* const express = require("express");
-const router = express.Router();
-
-// Temporary in-memory storage for demonstration
-let recentCheckIns = [];
-
-// POST: student check-in
-router.post("/checkin", (req, res) => {
-  const { id } = req.body;
-
-  if (!id) return res.status(400).json({ message: "ID is required" });
-
-  const checkIn = {
-    id,
-    timestamp: new Date().toISOString(),
-  };
-
-  // Add to the top of the array
-  recentCheckIns.unshift(checkIn);
-
-  // Keep only latest 50 check-ins
-  if (recentCheckIns.length > 50) recentCheckIns.pop();
-
-  res.status(200).json({ message: "Check-in recorded", checkIn });
-});
-
-// GET: get recent check-ins
-router.get("/recent", (req, res) => {
-  res.json(recentCheckIns);
-});
-
-module.exports = router;
- */ //almost correct ver
-
 const express = require("express");
 const router = express.Router();
-const User = require('../models/User');
-const Attendance = require('../models/Attendance');
+const User = require("../models/User");
+const Attendance = require("../models/Attendance"); // this exports the ModAttendance model (collection: mod_attendances)
 
 let recentCheckIns = [];
-let lastNameBuffer = null; // store last name until ID arrives
 
-
-async function getUserNameByIdNumber(idNumber) {
-  if (!idNumber) {
-    throw new Error("idNumber required");
-  }
-
-  const user = await User.findOne({ idNumber: String(idNumber) });
-
-  if (!user) {
-    return "Unknown";
-  }
-
-  return user.name;
-}
+// ----------------- Helpers -----------------
 
 function getUserBasicByIdNumber(idNumber) {
   return User.findOne({ idNumber: String(idNumber) })
     .select("name email idNumber")
-    .lean(); // returns { _id, name, email, idNumber } or null
+    .lean();
 }
 
-
-// ✅ Helper: Parse swipe data
+// Parse swipe data (same logic as before)
 function parseSwipe(rawInput) {
   if (!rawInput) return { id: "", name: "" };
 
-  let id = "";
-  let name = "";
+  var id = "";
+  var name = "";
 
   // Track 1 (name): %B6391500926068134^NGUYEN/TRUONG B ^
-  const track1 = rawInput.match(/%B\d+\^([^/]+)\/([^\^]+)/);
+  var track1 = rawInput.match(/%B\d+\^([^/]+)\/([^\^]+)/);
   if (track1) {
-    const last = track1[1].trim().replace(/[^A-Za-z]/g, "");
-    const first = track1[2].trim().replace(/[^A-Za-z]/g, "");
-    name = `${first} ${last}`;
+    var last = track1[1].trim().replace(/[^A-Za-z]/g, "");
+    var first = track1[2].trim().replace(/[^A-Za-z]/g, "");
+    name = first + " " + last;
   }
 
   // Track 2 / Track 3 (ID): ;1002151686?
-  const trackId = rawInput.match(/;(\d{6,})\?/);
+  var trackId = rawInput.match(/;(\d{6,})\?/);
   if (trackId) id = trackId[1];
 
-  return { id, name };
+  return { id: id, name: name };
 }
 
-router.post("/checkin", (req, res) => {
-  const { id: rawInput } = req.body;
-  if (!rawInput) return res.status(400).json({ message: "Swipe data required" });
+// ----------------- Routes -----------------
 
-  let { id, name } = parseSwipe(rawInput);
+// POST: swipe / check-in / check-out
+router.post("/checkin", async (req, res) => {
+  try {
+    var rawInput = "";
+    if (req.body && req.body.id) {
+      rawInput = String(req.body.id).trim();
+    }
 
-  // if manual type-in looks like UTA ID
-  if (rawInput.startsWith("100")) id = rawInput.trim();
+    if (!rawInput) {
+      return res.status(400).json({ message: "Swipe data required" });
+    }
 
-  if (!id) {
-    return res.status(400).json({ message: "Invalid swipe data" });
-  }
+    // 1) Parse swipe or manual ID
+    var parsed = parseSwipe(rawInput);
+    var studentId = parsed.id;
+    var parsedName = parsed.name;
 
-  // fetch name from DB asynchronously
-getUserBasicByIdNumber(id)
-    .then(user => {
-      const finalName = (user?.name) || name || "Unknown";
-      const email = user?.email || "unknown@unknown";
+    // If manual type-in looks like UTA ID (100...)
+    if (rawInput.indexOf("100") === 0) {
+      studentId = rawInput;
+    }
 
-      if(finalName == "Unknown") {
-        return res.status(200).json({ message: "Error: User not registered" });
-      }
+    if (!studentId) {
+      return res.status(400).json({ message: "Invalid swipe data" });
+    }
 
-      const checkIn = {
-        id,
+    // 2) Look up user by idNumber in Users collection
+    var user = await getUserBasicByIdNumber(studentId);
+
+    var finalName =
+      user && user.name
+        ? user.name
+        : parsedName
+          ? parsedName
+          : "Unknown";
+
+    var email =
+      user && user.email
+        ? user.email
+        : "unknown@unknown";
+
+    var resolvedStudentId =
+      user && user.idNumber
+        ? user.idNumber
+        : studentId;
+
+    if (!user || finalName === "Unknown") {
+      // keep your old behavior
+      return res
+        .status(200)
+        .json({ message: "Error: User not registered" });
+    }
+
+    var now = new Date();
+    var nowIso = now.toISOString();
+
+    // 3) Find or create per-student attendance doc in mod_attendances
+    var attendanceDoc = await Attendance.findOne({ studentId: resolvedStudentId });
+
+    if (!attendanceDoc) {
+      attendanceDoc = new Attendance({
+        studentId: resolvedStudentId,
+        email: email,
         name: finalName,
-        timestamp: new Date().toISOString(),
-      };
-      
-      // Prevent duplicates
-      const existing = recentCheckIns.find(entry => entry.id === id);
-      if (existing) {
-        // if already signed in --> sign out
-        return Attendance.create({
-          email,
-          type: "Sign Out",
-          timestamp: new Date(checkIn.timestamp),
-        })
-        .then(() => {
-          // remove from check-in array
-          recentCheckIns.splice(recentCheckIns.indexOf(existing), 1);
-          return res.status(200).json({ message: "Student checked out successfully", checkIn: existing });
-        });
+        type: "Signed-OUT",
+        visits: [],
+      });
+    } else {
+      // keep email/name synced with User on each swipe
+      attendanceDoc.email = email;
+      attendanceDoc.name = finalName;
+    }
+
+    var visits = attendanceDoc.visits || [];
+    var lastVisit = visits.length > 0 ? visits[visits.length - 1] : null;
+
+    // 4) SIGN-IN vs SIGN-OUT based on last visit
+    if (!lastVisit || lastVisit.checkOut) {
+      // ---------- SIGN-IN ----------
+      attendanceDoc.visits.push({
+        checkIn: now,
+      });
+      attendanceDoc.type = "Signed-IN";
+
+      await attendanceDoc.save();
+
+      // Update in-memory list (remove old entry if any)
+      var idxIn = -1;
+      for (var i = 0; i < recentCheckIns.length; i++) {
+        if (recentCheckIns[i].id === resolvedStudentId) {
+          idxIn = i;
+          break;
+        }
+      }
+      if (idxIn !== -1) {
+        recentCheckIns.splice(idxIn, 1);
       }
 
-      // Write to Mongo attendance history
-      return Attendance.create({
-        email,
-        type: "Sign In",
-        timestamp: new Date(checkIn.timestamp),
-      })
-      .then(() => {
-        // keep recent in memory list
-        recentCheckIns.unshift(checkIn);
-        if (recentCheckIns.length > 50) recentCheckIns.pop();
+      var checkInRecord = {
+        id: resolvedStudentId,
+        name: finalName,
+        timestamp: nowIso,
+        status: "Signed-IN",
+      };
 
-        console.log(`✅ ID: ${checkIn.id} — Name: ${checkIn.name} — Time: ${new Date(checkIn.timestamp).toLocaleTimeString()}`);
+      recentCheckIns.unshift(checkInRecord);
+      if (recentCheckIns.length > 50) recentCheckIns.pop();
 
-        return res.status(200).json({ message: "Check-in recorded", checkIn });
+      console.log(
+        "✅ SIGN-IN — ID: " +
+        resolvedStudentId +
+        " — Name: " +
+        finalName +
+        " — Time: " +
+        now.toLocaleTimeString()
+      );
+
+      return res.status(200).json({
+        message: "Check-in recorded",
+        checkIn: checkInRecord,
       });
-    })
-    .catch(err => {
-      console.error("checkin lookup error:", err);
-      return res.status(400).json({ message: "Invalid check-in data" });
-    });
+    } else {
+      // ---------- SIGN-OUT ----------
+      lastVisit.checkOut = now;
+      attendanceDoc.type = "Signed-OUT";
+
+      await attendanceDoc.save();
+
+      var durationMs = lastVisit.checkOut - lastVisit.checkIn;
+      var minutes = Math.round(durationMs / 60000);
+
+      // Update in-memory list
+      var idxOut = -1;
+      for (var j = 0; j < recentCheckIns.length; j++) {
+        if (recentCheckIns[j].id === resolvedStudentId) {
+          idxOut = j;
+          break;
+        }
+      }
+      if (idxOut !== -1) {
+        recentCheckIns.splice(idxOut, 1);
+      }
+
+      var checkoutRecord = {
+        id: resolvedStudentId,
+        name: finalName,
+        timestamp: nowIso,
+        status: "Signed-OUT",
+        durationMinutes: minutes,
+      };
+
+      recentCheckIns.unshift(checkoutRecord);
+      if (recentCheckIns.length > 50) recentCheckIns.pop();
+
+      console.log(
+        "✅ SIGN-OUT — ID: " +
+        resolvedStudentId +
+        " — Name: " +
+        finalName +
+        " — Time: " +
+        now.toLocaleTimeString() +
+        " — Duration: " +
+        minutes +
+        " min"
+      );
+
+      return res.status(200).json({
+        message: "Student checked out successfully",
+        checkIn: checkoutRecord,
+      });
+    }
+  } catch (err) {
+    console.error("checkin error:", err);
+    return res
+      .status(500)
+      .json({ message: "Invalid check-in data" });
+  }
 });
 
-// ✅ GET: recent check-ins
+// GET: recent check-ins
 router.get("/recent", (req, res) => {
-  res.json(recentCheckIns);
+  try {
+    return res.json(recentCheckIns);
+  } catch (err) {
+    console.error("recent error:", err);
+    return res
+      .status(500)
+      .json({ message: "Failed to load recent check-ins" });
+  }
 });
 
 module.exports = router;
