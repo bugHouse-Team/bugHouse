@@ -6,7 +6,7 @@
   border-radius: 22px;
   margin-bottom: 1rem;
   padding: 1rem;
-  height: 46%;          /* Takes half the parent's height */
+  height: 100%;          /* Takes half the parent's height */
   display: flex;        /* Flex layout */
   flex-direction: column;
   
@@ -166,7 +166,7 @@
 /* ✅ Attendance Section */
 /* ==================== */
 
-.authRequestContainer {
+.attendanceSectionContainer {
   display: flex;
  
   flex-direction: column;

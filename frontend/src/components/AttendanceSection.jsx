@@ -1,45 +1,54 @@
-/* import React, { useState } from "react";
-import "../styles/AuthRequest.css";
+import React, { useEffect, useState } from "react";
+import "../styles/AttendanceSection.css";
 
-function AttendanceSection() {
-  const [studentId, setStudentId] = useState("");
-  const [attendanceList, setAttendanceList] = useState([]);
+// Component for Attendance Tracking Box
+function AttendanceTrackingBox() {
+  const [recentCheckIns, setRecentCheckIns] = useState([]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const trimmedId = studentId.trim();
-    if (trimmedId === "") return;
-
-    // Here we simulate looking up a student's profile by ID
-    // Later you can replace this with a real fetch from your backend
-    const studentProfile = {
-      id: trimmedId,
-      name: "Student " + trimmedId.slice(-3), // fake name for now
-    };
-
-    // Avoid duplicates
-    if (!attendanceList.find((s) => s.id === trimmedId)) {
-      setAttendanceList([...attendanceList, studentProfile]);
+  const fetchCheckIns = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/attendance/recent");
+      const data = await res.json();
+      setRecentCheckIns(data);
+    } catch (err) {
+      console.error("Failed to fetch recent check-ins:", err);
     }
-
-    setStudentId(""); // clear the input after submitting
   };
 
+  useEffect(() => {
+    fetchCheckIns();
+    const interval = setInterval(fetchCheckIns, 5000); // refresh every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <section className="authSubSectionContainer">
-      <h2 className="sectionTitle">Attendance Tracking:</h2>
-      <div className="scrollInner">
-        <ul className="attendanceList">
-          {checkedInStudents.map((student, index) => (
+    <div className="scrollInner">
+      <ul className="attendanceList">
+        {recentCheckIns.length > 0 ? (
+          recentCheckIns.map((entry, index) => (
             <li key={index}>
-              ✅ {student.name} ({student.id})
+              ✅ ID: {entry.id}  Name: {entry.name} — Time: {new Date(entry.timestamp).toLocaleTimeString()}
             </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+          ))
+        ) : (
+          <li>No check-ins yet</li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+function AttendanceSection() {
+
+  return (
+    <div className="attendanceSectionContainer">
+      {/* --- Attendance Tracking Box --- */}
+      <section className="authSubSectionContainer">
+        <h2 className="sectionTitle">Attendance Tracking:</h2>
+        <AttendanceTrackingBox />
+      </section>
+    </div>
   );
 }
 
 export default AttendanceSection;
- */

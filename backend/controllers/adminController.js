@@ -53,7 +53,7 @@ exports.approveAvailability = async (req, res) => {
     availability.isApproved = true;
     await availability.save();
 
-    res.status(200).json({ message: 'Availability approved and slots generated', slotsCount: slots.length });
+    res.status(200).json({ message: 'Availability approved' });
   } catch (err) {
     console.error('Internal error approving availability:', err);
     res.status(500).json({ message: 'Internal server error' });
