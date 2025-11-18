@@ -3,10 +3,8 @@ import axios from "axios";
 import "../styles/StudentAttendance.css";
 import { useNavigate } from "react-router-dom";
 
-
-
 const StudentAttendance = ({ user }) => {
-  const [attendanceLog, setAttendanceLog] = useState([]);
+  const [visits, setVisits] = useState([]);
   const navigate = useNavigate();
   const token = localStorage.getItem("firebase_token");
 
@@ -16,91 +14,90 @@ const StudentAttendance = ({ user }) => {
 
     if (!user?.email) return;
 
-    const logAttendance = async () => {
+    const fetchAttendance = async () => {
       try {
-        /*console.log("📤 Sending POST to log attendance...");
-        await axios.post("/api/students/attendance/log",
-          {email: user.email,
-          type: "Sign In",}
-          ,{headers: {
-            Authorization: `Bearer ${token}`,
-          }},).catch((err) => {
-                const status = err.response?.status;
-                if (status === 302) {
-                    console.warn("🚫 302 Error - redirecting to login...");
-                    navigate("/signin");
-                } else {
-                    console.error("❌ Error:", err);
-                }
-            });
-        console.log("✅ Attendance logged");*/
-        fetchAttendance();
+        console.log("📥 Fetching attendance history...");
+        const res = await axios.get(
+          `/api/students/attendance/${user.email}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log("📊 Fetched attendance:", res.data);
+
+        // Backend now returns an array of visits:
+        // [{ visitNumber, checkIn, checkOut }, ...]
+        let data = res.data;
+
+        // Be defensive: if backend ever changes shape
+        if (!Array.isArray(data)) {
+          if (data && Array.isArray(data.visits)) {
+            data = data.visits;
+          } else {
+            data = [];
+          }
+        }
+
+        setVisits(data);
       } catch (err) {
-        console.error("❌ Failed to log sign in:", err);
+        const status = err.response?.status;
+        if (status === 302) {
+          console.warn("🚫 302 Error - redirecting to login...");
+          navigate("/signin");
+        } else {
+          console.error("❌ Error fetching attendance:", err);
+        }
       }
     };
 
-    const fetchAttendance = async () => {
-      console.log("📥 Fetching attendance history...");
-      
-      await axios.get(`/api/students/attendance/${user.email}`,{headers: {
-        Authorization: `Bearer ${token}`,
-      }},).then((res) => {
-        console.log("📊 Fetched attendance:", res.data);
-        setAttendanceLog(res.data);
-      }).catch((err) => {
-              const status = err.response?.status;
-              if (status === 302) {
-                  console.warn("🚫 302 Error - redirecting to login...");
-                  navigate("/signin");
-              } else {
-                  console.error("❌ Error:", err);
-              }
-          });
-    };
-
-    logAttendance(); // no need to log sign-ins as attendance
-  }, [user?.email]);
-
-  // sign out when window is closed --> log signout as "attendance"
-  /*
-  useEffect(() => {
-    if (!user?.email) return;
-
-    const handleBeforeUnload = () => {
-      const url = "/api/students/attendance/log";
-      const payload = JSON.stringify({
-        email: user.email,
-        type: "Sign Out",
-      });
-
-      const headers = {
-        type: "application/json",
-      };
-
-      navigator.sendBeacon(url, new Blob([payload], headers));
-      console.log("📤 Sent Sign Out via beacon");
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [user?.email]); */
+    fetchAttendance();
+  }, [user?.email, navigate, token]);
 
   return (
     <div className="attendance-container">
       <h3 className="attendance-title">Attendance History</h3>
+
       <div className="attendance-log">
-        {attendanceLog.map((entry, index) => (
-          <div key={index}>
-            <strong>{entry.type}</strong> –{" "}
-            {new Date(entry.timestamp).toLocaleString()}
-          </div>
-        ))}
+        {visits.length === 0 && (
+          <div>No visits recorded yet.</div>
+        )}
+
+        {visits.map((visit, index) => {
+          const visitNum =
+            visit.visitNumber || visits.length - index; // fallback numbering
+
+          const checkIn = visit.checkIn
+            ? new Date(visit.checkIn).toLocaleString()
+            : "—";
+
+          const checkOut = visit.checkOut
+            ? new Date(visit.checkOut).toLocaleString()
+            : visit.checkIn
+              ? "In progress"
+              : "—";
+
+          return (
+            <div key={index} className="attendance-visit">
+              <strong>Visit {visitNum}</strong>
+
+              <div>
+                In: <span>{checkIn}</span>
+              </div>
+
+              <div>
+                Out: <span>{checkOut}</span>
+              </div>
+
+              <hr />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
-  
-
-}; // ✅ this closes the StudentAttendance function
+};
 
 export default StudentAttendance;

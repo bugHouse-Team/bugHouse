@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import HeaderBar from "./HeaderBar";
-import AuthRequest from "./AuthRequest";
+import AttendanceSection from "./AttendanceSection";
 import ProfileSearch from "./ProfileSearch";
 import AvailabilityRequests from "./AvailabilityRequests";
 import Profile from "./Profile";
@@ -42,7 +42,7 @@ const AdminDashboard = () => {
           </div>
       </main>
       <main className="rightPanel">
-        <AuthRequest />
+        <AttendanceSection />
       </main>
     </div>
   );

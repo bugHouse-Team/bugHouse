@@ -9,6 +9,7 @@ const SlotSchema = new mongoose.Schema({
   endTime: String,
   isBooked: { type: Boolean, default: false },
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
+  
 }, {
   toJSON: {
     virtuals: true,

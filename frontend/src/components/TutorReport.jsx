@@ -47,10 +47,6 @@ const TutorReport = ({ tutorId }) => {
       </div>
 
       <div className="tutor-report-item">
-        <strong>Average Rating:</strong> <span className="tutor-rating">5.0</span>
-      </div>
-
-      <div className="tutor-report-item">
         <strong>Subjects:</strong> {report.subjects?.length ? report.subjects.join(", ") : "N/A"}
       </div>
     </div>
