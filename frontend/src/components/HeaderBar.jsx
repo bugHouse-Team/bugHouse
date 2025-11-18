@@ -71,19 +71,6 @@ function HeaderBar() {
     const handleSignOutClick = async () => {
         const email = localStorage.getItem("emailForSignIn");
     
-        /*if (email) {
-            await axios.post(`${API_URL}/api/students/attendance/log`,
-                {email, type:"Sign Out"},
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    },
-                },).then((res) => {
-                    console.log("✅ Manual Sign Out logged");
-                }).catch((err) => {
-                    console.error("❌ Failed to log sign out:", err);
-                });
-        }*/
 
         setSignoutSuccess(true);
         

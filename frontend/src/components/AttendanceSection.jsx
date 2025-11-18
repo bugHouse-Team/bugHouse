@@ -27,7 +27,7 @@ function AttendanceTrackingBox() {
         {recentCheckIns.length > 0 ? (
           recentCheckIns.map((entry, index) => (
             <li key={index}>
-              ✅ ID: {entry.id}  Name: {entry.name} — Time: {new Date(entry.timestamp).toLocaleTimeString()}
+              ✅ Name: {entry.name} ID: {entry.id} — Time: {new Date(entry.timestamp).toLocaleTimeString()}
             </li>
           ))
         ) : (
