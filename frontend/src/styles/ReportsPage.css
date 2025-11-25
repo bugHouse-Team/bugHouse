@@ -1,0 +1,183 @@
+/* Container for the reports page */
+.reports-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    /* Center horizontally */
+    align-items: flex-start;
+    /* ⬅ was center; now top-align to avoid header overlap */
+    background: url("../assets/images/school.png") no-repeat center center fixed;
+    background-size: cover;
+    padding: 100px 20px 20px;
+    /* ⬅ extra top padding to clear HeaderBar */
+    box-sizing: border-box;
+}
+
+/* Layout: left (overview) + right (charts) */
+.reports-layout {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+/* LEFT: Overview card, similar to landing-page card */
+.reports-card {
+    flex: 1 1 45%;
+    background-color: #60a9f8;
+    /* Light blue */
+    padding: 24px;
+    border: 2px solid orange;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
+    color: #333;
+    min-width: 280px;
+}
+
+/* Title */
+.reports-title {
+    margin: 0 0 16px;
+    text-align: center;
+    color: #333;
+}
+
+/* Error & loading states */
+.reports-error {
+    margin-top: 8px;
+    padding: 10px;
+    background-color: #ffdddd;
+    border: 1px solid #cc0000;
+    border-radius: 5px;
+    color: #990000;
+    text-align: center;
+}
+
+.reports-loading {
+    text-align: center;
+    font-style: italic;
+}
+
+/* Meta info (Generated timestamp, user) */
+.reports-meta {
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+}
+
+/* Summary grid */
+.reports-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.reports-summary-item {
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 6px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.reports-summary-item .label {
+    display: block;
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 4px;
+}
+
+.reports-summary-item .value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #222;
+}
+
+/* Date range line */
+.reports-daterange {
+    margin-top: 8px;
+    font-size: 0.95rem;
+}
+
+/* Footer note / future charts area */
+.reports-footer-note {
+    margin-top: 16px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    text-align: center;
+    color: #222;
+}
+
+/* RIGHT: charts column (empty for now) */
+.reports-charts {
+    flex: 1 1 55%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 280px;
+}
+
+/* ===== Tutor stats section ===== */
+.tutors-section {
+    margin-top: 24px;
+}
+
+.tutors-title {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.tutors-empty {
+    font-size: 0.95rem;
+    color: #333;
+}
+
+/* Table-style layout */
+.tutors-table {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tutors-header-row,
+.tutors-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    align-items: flex-start;
+}
+
+.tutors-header-row {
+    background-color: rgba(0, 0, 0, 0.06);
+    font-weight: 600;
+}
+
+.tutors-row {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+}
+
+.tutor-col {
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.tutor-main {
+    text-align: left;
+}
+
+.tutor-name {
+    font-weight: 600;
+    display: block;
+}
+
+.tutor-email {
+    display: block;
+    font-size: 0.8rem;
+    color: #555;
+}
