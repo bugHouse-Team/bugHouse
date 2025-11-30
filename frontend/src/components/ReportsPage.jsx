@@ -7,6 +7,9 @@ const ReportsPage = () => {
     const [data, setData] = useState(null);
     const [errorMsg, setErrorMsg] = useState("");
     const [loading, setLoading] = useState(true);
+    const [downloadingCenter, setDownloadingCenter] = useState(false);
+    const [downloadingTutorId, setDownloadingTutorId] = useState(null);
+
     const token = localStorage.getItem("firebase_token");
 
     useEffect(() => {
@@ -34,12 +37,93 @@ const ReportsPage = () => {
     const summary = data?.summary || {};
     const tutorStats = data?.tutorStats || [];
 
+    // ===== CSV download helpers =====
+    const downloadBlob = (blob, filename) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    };
+
+    const handleDownloadCenterReport = async () => {
+        try {
+            setDownloadingCenter(true);
+            const res = await axios.get("/api/reports/center-csv", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                responseType: "blob", // important for file download
+            });
+
+            const blob = new Blob([res.data], {
+                type: "text/csv;charset=utf-8;",
+            });
+            downloadBlob(blob, "bughouse-center-report.csv");
+        } catch (err) {
+            console.error("Error downloading center report:", err);
+            alert("Failed to download center report.");
+        } finally {
+            setDownloadingCenter(false);
+        }
+    };
+
+    const handleDownloadTutorReport = async (tutor) => {
+        if (!tutor?.tutorId) return;
+
+        try {
+            setDownloadingTutorId(tutor.tutorId);
+
+            const res = await axios.get(
+                `/api/reports/tutor-csv/${tutor.tutorId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    responseType: "blob",
+                }
+            );
+
+            const safeName =
+                (tutor.tutorName || "tutor")
+                    .toLowerCase()
+                    .replace(/\s+/g, "_")
+                    .replace(/[^a-z0-9_]/g, "") || "tutor";
+
+            const blob = new Blob([res.data], {
+                type: "text/csv;charset=utf-8;",
+            });
+            downloadBlob(blob, `tutor-report-${safeName}.csv`);
+        } catch (err) {
+            console.error("Error downloading tutor report:", err);
+            alert("Failed to download tutor report.");
+        } finally {
+            setDownloadingTutorId(null);
+        }
+    };
+
     return (
         <div className="reports-page">
             <div className="reports-layout">
                 {/* LEFT: Overview + tutor stats card */}
                 <div className="reports-card">
                     <h2 className="reports-title">Attendance Reports</h2>
+
+                    {/* Top-level actions */}
+                    <div className="reports-actions">
+                        <button
+                            className="reports-download-btn"
+                            onClick={handleDownloadCenterReport}
+                            disabled={downloadingCenter || loading || !!errorMsg}
+                        >
+                            {downloadingCenter
+                                ? "Downloading Center Report..."
+                                : "Download Center Report (CSV)"}
+                        </button>
+                    </div>
 
                     {errorMsg && <p className="reports-error">{errorMsg}</p>}
 
@@ -97,15 +181,11 @@ const ReportsPage = () => {
                                 <p>
                                     <strong>Date Range:</strong>{" "}
                                     {summary.dateRange?.start
-                                        ? new Date(
-                                            summary.dateRange.start
-                                        ).toLocaleDateString()
+                                        ? new Date(summary.dateRange.start).toLocaleDateString()
                                         : "—"}{" "}
                                     →{" "}
                                     {summary.dateRange?.end
-                                        ? new Date(
-                                            summary.dateRange.end
-                                        ).toLocaleDateString()
+                                        ? new Date(summary.dateRange.end).toLocaleDateString()
                                         : "—"}
                                 </p>
                             </div>
@@ -121,17 +201,12 @@ const ReportsPage = () => {
                                 ) : (
                                     <div className="tutors-table">
                                         <div className="tutors-header-row">
-                                            <span className="tutor-col tutor-main">
-                                                Tutor
-                                            </span>
+                                            <span className="tutor-col tutor-main">Tutor</span>
                                             <span className="tutor-col">Sessions</span>
-                                            <span className="tutor-col">
-                                                Unique Students
-                                            </span>
+                                            <span className="tutor-col">Unique Students</span>
                                             <span className="tutor-col">Total Minutes</span>
-                                            <span className="tutor-col">
-                                                Avg Session (min)
-                                            </span>
+                                            <span className="tutor-col">Avg Session (min)</span>
+                                            <span className="tutor-col">Actions</span>
                                         </div>
 
                                         {tutorStats.map((tutor) => (
@@ -161,6 +236,21 @@ const ReportsPage = () => {
                                                 <span className="tutor-col">
                                                     {tutor.avgSessionMinutes ?? 0}
                                                 </span>
+                                                <span className="tutor-col">
+                                                    <button
+                                                        className="tutor-download-btn"
+                                                        onClick={() =>
+                                                            handleDownloadTutorReport(tutor)
+                                                        }
+                                                        disabled={
+                                                            downloadingTutorId === tutor.tutorId
+                                                        }
+                                                    >
+                                                        {downloadingTutorId === tutor.tutorId
+                                                            ? "Downloading Tutor CSV..."
+                                                            : "Download Tutor Report (CSV)"}
+                                                    </button>
+                                                </span>
                                             </div>
                                         ))}
                                     </div>
@@ -168,8 +258,7 @@ const ReportsPage = () => {
                             </div>
 
                             <div className="reports-footer-note">
-                                More detailed charts and downloadable reports will appear
-                                here.
+                                CSV exports are compatible with Excel and Google Sheets.
                             </div>
                         </>
                     )}
