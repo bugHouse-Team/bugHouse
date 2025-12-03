@@ -39,8 +39,9 @@ function AppointmentsPage({ user, onChange, refreshTrigger }) {
       const res = await axios.get(`${API_URL}/api/students/${studentId}/bookings`,{headers: {
           Authorization: `Bearer ${token}`,
         },});
+      console.log("Fetched appointments:", res.data);
       const formatted = res.data.map((booking) => ({
-        id: booking.id,
+        id: booking._id,
         tutor: booking.tutorId?.name || "Unknown Tutor",
         time: formatBookingTime(booking),
         subjects: booking.subjects.join(", ") || "No subjects listed",
@@ -69,6 +70,7 @@ function AppointmentsPage({ user, onChange, refreshTrigger }) {
 
   const handleCancelAppointment = async () => {
     try {
+      console.log(selectedAppointment);
       await axios.delete(`${API_URL}/api/slots/${selectedAppointment.id}`, {headers: {
           Authorization: `Bearer ${token}`,
         },});
