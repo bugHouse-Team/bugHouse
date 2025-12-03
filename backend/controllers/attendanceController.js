@@ -1,7 +1,7 @@
 // backend/controllers/attendanceController.js
 const Attendance = require("../models/Attendance");
 const User = require("../models/User");
-const MAX_SESSION_MS = 75 * 60 * 1000; //max allowed session length: 2 hours (in ms)
+const MAX_SESSION_MS = 2 * 60 * 1000; //max allowed session length: 2 hours (in ms)
 
 // Helper to get user basic info by ID number
 const getUserBasicByIdNumber = (idNumber) => {
