@@ -1,6 +1,7 @@
 // backend/controllers/attendanceController.js
 const Attendance = require("../models/Attendance");
 const User = require("../models/User");
+const MAX_SESSION_MS = 75 * 60 * 1000; //max allowed session length: 2 hours (in ms)
 
 // Helper to get user basic info by ID number
 const getUserBasicByIdNumber = (idNumber) => {
@@ -106,6 +107,29 @@ exports.checkIn = async (req, res) => {
     var visits = attendanceDoc.visits || [];
     var lastVisit = visits.length > 0 ? visits[visits.length - 1] : null;
 
+    if (lastVisit && lastVisit.checkIn && !lastVisit.checkOut) {
+      var diffMs = now - lastVisit.checkIn;
+      if (diffMs > MAX_SESSION_MS) {
+        // You can use `now` instead if you prefer, but this caps it at exactly 2h
+        lastVisit.checkOut = new Date(
+          lastVisit.checkIn.getTime() + MAX_SESSION_MS
+        );
+        attendanceDoc.type = "Signed-OUT";
+        await attendanceDoc.save();
+
+        console.log(
+          "⏲️ AUTO SIGN-OUT after 2h — ID: " +
+            resolvedStudentId +
+            " — Name: " +
+            finalName +
+            " — Original check-in: " +
+            lastVisit.checkIn.toLocaleTimeString()
+        );
+
+        // lastVisit now has checkOut, so next logic will treat this swipe as a new SIGN-IN
+      }
+    }
+
     // 4) SIGN-IN vs SIGN-OUT based on last visit
     if (!lastVisit || lastVisit.checkOut) {
       // ---------- SIGN-IN ----------
@@ -178,6 +202,7 @@ exports.checkIn = async (req, res) => {
 // GET /api/attendance/recent
 exports.getRecentAttendance = async (req, res) => {
   try {
+    const now = new Date();
     // Get only signed-in users from database
     const signedInAttendance = await Attendance.find({ type: "Signed-IN" })
       .select("studentId name email type visits")
@@ -194,8 +219,37 @@ exports.getRecentAttendance = async (req, res) => {
 
       // Get the most recent visit (should be an active check-in)
       const lastVisit = visits[visits.length - 1];
-      
-      if (lastVisit.checkIn && !lastVisit.checkOut) {
+       const diffMs = now - new Date(lastVisit.checkIn);
+
+        // 🔔 NEW: auto sign-out here too if over 2 hours
+        if (diffMs > MAX_SESSION_MS) {
+          // Cap at exactly 2h after check-in
+          const autoCheckOut = new Date(
+            new Date(lastVisit.checkIn).getTime() + MAX_SESSION_MS
+          );
+
+          await Attendance.updateOne(
+            { _id: attendance._id, "visits._id": lastVisit._id },
+            {
+              $set: {
+                "visits.$.checkOut": autoCheckOut,
+                type: "Signed-OUT",
+              },
+            }
+          );
+
+          console.log(
+            "⏲️ AUTO SIGN-OUT (recent view) after 2h — ID: " +
+              attendance.studentId +
+              " — Name: " +
+              attendance.name
+          );
+
+          // Don't show them as currently signed-in
+          continue;
+        }
+        if (lastVisit.checkIn && !lastVisit.checkOut) {
+        
         // Currently signed in - show check-in time
         recentCheckIns.push({
           id: attendance.studentId,
