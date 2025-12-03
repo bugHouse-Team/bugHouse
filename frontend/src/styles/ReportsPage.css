@@ -1,0 +1,392 @@
+/* Container for the reports page */
+.reports-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    /* stack cards vertically */
+    align-items: center;
+    /* center horizontally */
+    background: url("../assets/images/school.png") no-repeat center center fixed;
+    background-size: cover;
+    padding: 300px 20px 20px;
+    /* top padding clears header */
+    box-sizing: border-box;
+}
+
+
+/* LEFT: Overview card */
+.reports-card {
+    width: 100%;
+    max-width: 1100px;
+    background-color: #60a9f8;
+    /* Light blue */
+    padding: 24px;
+    border: 2px solid orange;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
+    color: #333;
+    margin-bottom: 16px;
+    /* space before the recent card */
+}
+
+/* Title */
+.reports-title {
+    margin: 0 0 16px;
+    text-align: center;
+    color: #333;
+}
+
+/* Top filter + button row */
+.reports-filter-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+/* Date filter group */
+.reports-date-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.reports-date-filter label {
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.reports-date-filter input[type="date"] {
+    margin-top: 4px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 0.9rem;
+}
+
+/* Actions container (export buttons) */
+.reports-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Buttons */
+.reports-apply-btn,
+.reports-download-btn,
+.tutor-download-btn {
+    background-color: orange;
+    color: white;
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.reports-apply-btn:hover,
+.reports-download-btn:hover,
+.tutor-download-btn:hover {
+    background-color: darkorange;
+    transform: scale(1.02);
+}
+
+.reports-apply-btn:disabled,
+.reports-download-btn:disabled,
+.tutor-download-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+}
+
+
+/* Error & loading states */
+.reports-error {
+    margin-top: 8px;
+    padding: 10px;
+    background-color: #ffdddd;
+    border: 1px solid #cc0000;
+    border-radius: 5px;
+    color: #990000;
+    text-align: center;
+}
+
+.reports-loading {
+    text-align: center;
+    font-style: italic;
+}
+
+/* Meta info (Generated timestamp, user) */
+.reports-meta {
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+}
+
+/* Summary grid */
+.reports-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.reports-summary-item {
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 6px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.reports-summary-item .label {
+    display: block;
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 4px;
+}
+
+.reports-summary-item .value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #222;
+}
+
+
+/* Button group (if not already present) */
+.reports-date-controls,
+.reports-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+/* General report buttons */
+.reports-apply-btn,
+.reports-reset-btn,
+.reports-download-btn,
+.tutor-download-btn {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background-color: orange;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.reports-download-btn:hover,
+.tutor-download-btn:hover {
+    background-color: darkorange;
+    transform: translateY(-1px);
+}
+
+/* Reset is visually distinct (white) */
+.reports-reset-btn {
+    background-color: #ffffff;
+    color: #333;
+}
+
+.reports-reset-btn:hover {
+    background-color: #f0f0f0;
+    transform: translateY(-1px);
+}
+
+
+/* Date range line */
+.reports-daterange {
+    margin-top: 8px;
+    font-size: 0.95rem;
+}
+
+/* Footer note / future charts area */
+.reports-footer-note {
+    margin-top: 16px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    text-align: center;
+    color: #222;
+}
+
+
+/* ===== Tutor stats section ===== */
+.tutors-section {
+    margin-top: 24px;
+}
+
+.tutors-title {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.tutors-empty {
+    font-size: 0.95rem;
+    color: #333;
+}
+
+/* Table-style layout */
+.tutors-table {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tutors-header-row,
+.tutors-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    align-items: flex-start;
+}
+
+.tutors-header-row {
+    background-color: rgba(0, 0, 0, 0.06);
+    font-weight: 600;
+}
+
+.tutors-row {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+}
+
+.tutor-col {
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.tutor-main {
+    text-align: left;
+}
+
+.tutor-name {
+    font-weight: 600;
+    display: block;
+}
+
+.tutor-email {
+    display: block;
+    font-size: 0.8rem;
+    color: #555;
+}
+
+.center-preview-section {
+    margin-top: 18px;
+}
+
+.center-preview-title {
+    margin: 0 0 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.center-preview-empty {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.center-preview-table {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+}
+
+.center-preview-header,
+.center-preview-row {
+    display: grid;
+    grid-template-columns: 0.5fr 1.5fr 1.5fr 1.8fr 1.8fr 1fr;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    align-items: center;
+}
+
+.center-preview-header {
+    background-color: rgba(0, 0, 0, 0.06);
+    font-weight: 600;
+}
+
+.center-preview-row {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+}
+
+.center-preview-row span {
+    align-self: center;
+}
+
+.center-preview-subline {
+    display: block;
+    font-size: 0.75rem;
+    color: #555;
+}
+
+/* ===== Recent center attendance card (bottom) ===== */
+.reports-recent-card {
+    width: 100%;
+    max-width: 1100px;
+    background-color: rgba(96, 169, 248, 0.95);
+    padding: 16px;
+    border: 2px solid orange;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
+    color: #333;
+    margin-bottom: 16px;
+}
+
+
+.recent-title {
+    margin: 0 0 4px;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.recent-subtitle {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+}
+
+.recent-unfiltered-note {
+    font-style: italic;
+    font-size: 0.85rem;
+    color: #222;
+}
+
+.recent-table {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+}
+
+.recent-row {
+    display: grid;
+    grid-template-columns: 2fr 2fr 2fr 2fr 1fr 1fr;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.recent-header-row {
+    font-weight: 600;
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+.recent-email {
+    display: block;
+    font-size: 0.8rem;
+    color: #555;
+}
